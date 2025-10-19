@@ -1,0 +1,5 @@
+{
+  "name": "VRU Sizing Calculator",
+  "description": "A web-based questionnaire and calculator to determine the required Vapor Recovery Unit (VRU) flow rate for industrial compliance, based on liquid transfer during tank loading.",
+  "requestFramePermissions": []
+}

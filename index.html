@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VRU Sizing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      :root {
+        --color-background: #FDFBF6;
+        --color-panel-bg: #FFFFFF;
+        --color-panel-alt-bg: #F9FAFB;
+        --color-header-bg: #E6E6E6;
+        --color-header-text: #2D3748;
+        --color-text-primary: #2D3748;
+        --color-text-secondary: #6B7280;
+        --color-text-tertiary: #4A5568;
+        --color-border: #E2E8F0;
+        --color-accent-primary: #F5D781;
+        --color-accent-text: #333333;
+        --color-input-bg: #FFFFFF;
+        --color-input-focus-ring: #F5D781;
+        --color-error: #EF4444;
+        --color-info-bg: #FEF3C7;
+        --color-info-border: #FBBF24;
+        --color-info-text: #92400E;
+        --color-info-icon: #F59E0B;
+        --color-pdf-button-bg: var(--color-accent-primary);
+        --color-pdf-button-text: var(--color-accent-text);
+      }
+      body.dark {
+        --color-background: #111827; /* gray-900 */
+        --color-panel-bg: #1F2937; /* gray-800 */
+        --color-panel-alt-bg: #374151; /* gray-700 */
+        --color-header-bg: #1F2937; /* gray-800 */
+        --color-header-text: #F3F4F6; /* gray-100 */
+        --color-text-primary: #F3F4F6; /* gray-100 */
+        --color-text-secondary: #9CA3AF; /* gray-400 */
+        --color-text-tertiary: #D1D5DB; /* gray-300 */
+        --color-border: #4B5563; /* gray-600 */
+        --color-accent-primary: #3B82F6;
+        --color-accent-text: #FFFFFF;
+        --color-input-bg: #374151; /* gray-700 */
+        --color-input-focus-ring: #3B82F6;
+        --color-error: #F87171;
+        --color-info-bg: rgba(59, 130, 246, 0.1);
+        --color-info-border: #3B82F6;
+        --color-info-text: #BFDBFE;
+        --color-info-icon: #60A5FA;
+        --color-pdf-button-bg: #F5D781;
+        --color-pdf-button-text: #333333;
+      }
+      body.gold {
+        --color-background: #FFFBEB; /* Light creamy yellow */
+        --color-panel-bg: #FFFFFF;
+        --color-panel-alt-bg: #FEFDF8;
+        --color-header-bg: #F5D781; /* Vibrant yellow header */
+        --color-header-text: #333333; /* Dark text for contrast */
+        --color-text-primary: #5D4037;
+        --color-text-secondary: #8D6E63;
+        --color-text-tertiary: #795548;
+        --color-border: #FDE68A;
+        --color-accent-primary: #FBBF24; /* Stronger gold accent */
+        --color-accent-text: #FFFFFF;
+        --color-input-bg: #FFFFFF;
+        --color-input-focus-ring: #FBBF24;
+        --color-error: #C62828;
+        --color-info-bg: #FEF3C7;
+        --color-info-border: #FBBF24;
+        --color-info-text: #92400E;
+        --color-info-icon: #F59E0B;
+        --color-pdf-button-bg: #F5D781;
+        --color-pdf-button-text: #333333;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-[var(--color-background)]">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
