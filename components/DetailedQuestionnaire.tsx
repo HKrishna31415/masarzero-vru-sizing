@@ -184,17 +184,32 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
       });
 
     const logoUrl = 'https://i.ibb.co/Zpx00M2n/sevalitransparentlogo.png';
-    const logoBase64 = await getBase64Image(logoUrl);
     const pdf = new (window as any).jspdf.jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const W = pdf.internal.pageSize.getWidth();
     const H = pdf.internal.pageSize.getHeight();
     const m = 15;
 
-    pdf.addImage(logoBase64, 'PNG', (W - 60) / 2, m, 60, 60);
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.setTextColor('#1a202c');
-    pdf.text('VRU Specification Report', W / 2, m + 75, { align: 'center' });
-    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(14); pdf.setTextColor('#4A5568');
-    pdf.text('Preliminary Assessment', W / 2, m + 85, { align: 'center' });
+    if (company === 'kosman') {
+      // Kosman cover — no logo, text-based header with brand color
+      pdf.setFillColor('#1a4fa0');
+      pdf.rect(0, 0, W, 40, 'F');
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(26); pdf.setTextColor('#FFFFFF');
+      pdf.text('KOSMAN', W / 2, 22, { align: 'center' });
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(13); pdf.setTextColor('#FFFFFF');
+      pdf.text('\u79D1\u4ED5\u66FC\u73AF\u5883\u79D1\u6280', W / 2, 33, { align: 'center' });
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(20); pdf.setTextColor('#1a202c');
+      pdf.text('VRU Specification Report', W / 2, 60, { align: 'center' });
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(13); pdf.setTextColor('#4A5568');
+      pdf.text('Preliminary Assessment', W / 2, 70, { align: 'center' });
+    } else {
+      // Sevali cover — logo + title
+      const logoBase64 = await getBase64Image(logoUrl);
+      pdf.addImage(logoBase64, 'PNG', (W - 60) / 2, m, 60, 60);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.setTextColor('#1a202c');
+      pdf.text('VRU Specification Report', W / 2, m + 75, { align: 'center' });
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(14); pdf.setTextColor('#4A5568');
+      pdf.text('Preliminary Assessment', W / 2, m + 85, { align: 'center' });
+    }
 
     const projectName = (document.getElementById('projectName') as HTMLInputElement)?.value || 'Not Specified';
     const siteCity    = (document.getElementById('siteCity') as HTMLInputElement)?.value || '';
@@ -290,7 +305,8 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
       pdf.setFontSize(8); pdf.setTextColor(100);
       pdf.text('CEO: Mr. Yalçin Aliyev', m, H - 12);
       pdf.text('Phone: +994 55 320 42 81', m, H - 8);
-      pdf.text(`© ${new Date().getFullYear()} Sevali Energy. All rights reserved.`, W - m, H - 12, { align: 'right' });
+      const companyName = company === 'kosman' ? 'Kosman' : 'Sevali Energy';
+      pdf.text(`© ${new Date().getFullYear()} ${companyName}. All rights reserved.`, W - m, H - 12, { align: 'right' });
       pdf.text('For official use, consult a qualified engineer.', W - m, H - 8, { align: 'right' });
     }
 
