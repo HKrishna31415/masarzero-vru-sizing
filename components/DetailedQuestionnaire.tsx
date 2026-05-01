@@ -189,18 +189,55 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
     const H = pdf.internal.pageSize.getHeight();
     const m = 15;
 
+    const projectName = (document.getElementById('projectName') as HTMLInputElement)?.value || 'Not Specified';
+    const siteCity    = (document.getElementById('siteCity') as HTMLInputElement)?.value || '';
+    const siteCountry = (document.getElementById('siteCountry') as HTMLInputElement)?.value || '';
+    const siteLocation = [siteCity, siteCountry].filter(Boolean).join(', ') || 'Not Specified';
+    const contactPerson = (document.getElementById('contactPerson') as HTMLInputElement)?.value || 'Not Specified';
+    const generationDate = new Date().toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const generationDateZh = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    const disclaimer = 'This report is a preliminary assessment based on the data provided. It is for discussion purposes only and should not be considered a final engineering specification. A qualified engineer must be consulted for detailed design.';
+
     if (company === 'kosman') {
-      // Kosman cover — no logo, text-based header with brand color
-      pdf.setFillColor('#1a4fa0');
-      pdf.rect(0, 0, W, 40, 'F');
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(26); pdf.setTextColor('#FFFFFF');
-      pdf.text('KOSMAN', W / 2, 22, { align: 'center' });
-      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(13); pdf.setTextColor('#FFFFFF');
-      pdf.text('\u79D1\u4ED5\u66FC\u73AF\u5883\u79D1\u6280', W / 2, 33, { align: 'center' });
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(20); pdf.setTextColor('#1a202c');
-      pdf.text('VRU Specification Report', W / 2, 60, { align: 'center' });
-      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(13); pdf.setTextColor('#4A5568');
-      pdf.text('Preliminary Assessment', W / 2, 70, { align: 'center' });
+      // Kosman cover — rendered via HTML for Chinese font support
+      const cover = document.createElement('div');
+      cover.style.cssText = `position:absolute;left:-9999px;width:210mm;height:297mm;background:white;font-family:sans-serif;display:flex;flex-direction:column;`;
+      cover.innerHTML = `
+        <div style="background-color:#1a4fa0;height:40mm;display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;">
+          <div style="font-size:26pt;font-weight:bold;letter-spacing:2px;">KOSMAN</div>
+          <div style="font-size:13pt;margin-top:2mm;">科仕曼环境科技</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding-top:20mm;color:#1a202c;">
+          <h1 style="font-size:24pt;font-weight:bold;margin-bottom:4mm;">VRU Specification Report</h1>
+          <p style="font-size:14pt;color:#4A5568;">Preliminary Assessment</p>
+          
+          <div style="margin-top:35mm;width:100%;padding:0 20mm;font-size:12pt;color:#2D3748;">
+            <div style="display:grid;grid-template-columns:40mm 1fr;gap:10mm;margin-bottom:8mm;">
+              <span style="font-weight:bold;">项目名称:</span>
+              <span>${projectName}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:40mm 1fr;gap:10mm;margin-bottom:8mm;">
+              <span style="font-weight:bold;">项目地点:</span>
+              <span>${siteLocation}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:40mm 1fr;gap:10mm;margin-bottom:8mm;">
+              <span style="font-weight:bold;">联系人:</span>
+              <span>${contactPerson}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:40mm 1fr;gap:10mm;margin-bottom:8mm;">
+              <span style="font-weight:bold;">日期:</span>
+              <span>${generationDateZh}</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:20mm;font-size:9pt;color:#6B7280;line-height:1.5;">
+          ${disclaimer}
+        </div>
+      `;
+      document.body.appendChild(cover);
+      const coverCanvas = await (window as any).html2canvas(cover, { scale: 2 });
+      document.body.removeChild(cover);
+      pdf.addImage(coverCanvas.toDataURL('image/png'), 'PNG', 0, 0, W, H);
     } else {
       // Sevali cover — logo + title
       const logoBase64 = await getBase64Image(logoUrl);
@@ -209,25 +246,18 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
       pdf.text('VRU Specification Report', W / 2, m + 75, { align: 'center' });
       pdf.setFont('helvetica', 'normal'); pdf.setFontSize(14); pdf.setTextColor('#4A5568');
       pdf.text('Preliminary Assessment', W / 2, m + 85, { align: 'center' });
+
+      const dy = m + 105;
+      pdf.setFontSize(11); pdf.setTextColor('#2D3748');
+      [['Project:', projectName], ['Site:', siteLocation], ['Contact:', contactPerson], ['Date:', generationDate]].forEach(([k, v], i) => {
+        pdf.setFont('helvetica', 'bold'); pdf.text(k, m, dy + i * 10);
+        pdf.setFont('helvetica', 'normal'); pdf.text(v, m + 40, dy + i * 10);
+      });
+
+      pdf.setFontSize(9); pdf.setTextColor('#6B7280');
+      pdf.text(pdf.splitTextToSize(disclaimer, W - m * 2), m, H - m - 20);
     }
 
-    const projectName = (document.getElementById('projectName') as HTMLInputElement)?.value || 'Not Specified';
-    const siteCity    = (document.getElementById('siteCity') as HTMLInputElement)?.value || '';
-    const siteCountry = (document.getElementById('siteCountry') as HTMLInputElement)?.value || '';
-    const siteLocation = [siteCity, siteCountry].filter(Boolean).join(', ') || 'Not Specified';
-    const contactPerson = (document.getElementById('contactPerson') as HTMLInputElement)?.value || 'Not Specified';
-    const generationDate = new Date().toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    const dy = m + 105;
-    pdf.setFontSize(11); pdf.setTextColor('#2D3748');
-    [['Project:', projectName], ['Site:', siteLocation], ['Contact:', contactPerson], ['Date:', generationDate]].forEach(([k, v], i) => {
-      pdf.setFont('helvetica', 'bold'); pdf.text(k, m, dy + i * 10);
-      pdf.setFont('helvetica', 'normal'); pdf.text(v, m + 40, dy + i * 10);
-    });
-
-    const disclaimer = 'This report is a preliminary assessment based on the data provided. It is for discussion purposes only and should not be considered a final engineering specification. A qualified engineer must be consulted for detailed design.';
-    pdf.setFontSize(9); pdf.setTextColor('#6B7280');
-    pdf.text(pdf.splitTextToSize(disclaimer, W - m * 2), m, H - m - 20);
     pdf.addPage();
 
     // Render all sections into a hidden container
@@ -249,7 +279,7 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
 
     const h1 = document.createElement('h1');
     h1.style.cssText = 'font-size:1.4rem;font-weight:700;text-align:center;margin-bottom:1rem';
-    h1.textContent = 'VRU Specification Questionnaire';
+    h1.textContent = t.detailedVRUSpec;
     printContainer.appendChild(h1);
 
     const fieldsets = formElement.querySelectorAll('fieldset');
@@ -303,8 +333,10 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
     for (let i = 1; i <= pages; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8); pdf.setTextColor(100);
-      pdf.text('CEO: Mr. Yalçin Aliyev', m, H - 12);
-      pdf.text('Phone: +994 55 320 42 81', m, H - 8);
+      if (company === 'sevali') {
+        pdf.text('CEO: Mr. Yalçin Aliyev', m, H - 12);
+        pdf.text('Phone: +994 55 320 42 81', m, H - 8);
+      }
       const companyName = company === 'kosman' ? 'Kosman' : 'Sevali Energy';
       pdf.text(`© ${new Date().getFullYear()} ${companyName}. All rights reserved.`, W - m, H - 12, { align: 'right' });
       pdf.text('For official use, consult a qualified engineer.', W - m, H - 8, { align: 'right' });
