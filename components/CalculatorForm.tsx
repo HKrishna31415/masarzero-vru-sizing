@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { type VRUInput } from '../types';
 import { CalculatorUnitField } from './CalculatorUnitField';
 import { M3_TO_GAL_FACTOR, BBL_TO_GAL_FACTOR, BAR_TO_PSI_FACTOR, STANDARD_TEMP_F, GPM_TO_LPM_FACTOR } from '../constants';
+import { useLang } from '../LanguageContext';
 
 interface CalculatorFormProps {
   onCalculate: (inputs: VRUInput) => void;
@@ -19,6 +20,7 @@ type FormState = {
 };
 
 export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
+  const { t } = useLang();
   const [formState, setFormState] = useState<FormState>({
     deliveryRate: { value: null, unit: 'LPM' },
     simulOps: { value: null },
@@ -74,13 +76,13 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) =
 
   const validateInputs = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (formState.deliveryRate.value === null || formState.deliveryRate.value <= 0) newErrors.deliveryRate = "This field is required and must be positive.";
-    if (formState.simulOps.value === null || formState.simulOps.value <= 0) newErrors.simulOps = "This field is required and must be positive.";
-    if (formState.rvp.value === null || formState.rvp.value <= 0) newErrors.rvp = "This field is required and must be positive.";
-    if (formState.maxTemp.value === null) newErrors.maxTemp = "This field is required.";
-    if (formState.safetyFactor.value === null || formState.safetyFactor.value <= 0) newErrors.safetyFactor = "This field is required and must be positive.";
-    if (formState.tankVolume.value === null || formState.tankVolume.value <= 0) newErrors.tankVolume = "This field is required and must be positive.";
-    if (formState.tempSwing.value === null || formState.tempSwing.value <= 0) newErrors.tempSwing = "This field is required and must be positive.";
+    if (formState.deliveryRate.value === null || formState.deliveryRate.value <= 0) newErrors.deliveryRate = t.fieldRequired;
+    if (formState.simulOps.value === null || formState.simulOps.value <= 0) newErrors.simulOps = t.fieldRequired;
+    if (formState.rvp.value === null || formState.rvp.value <= 0) newErrors.rvp = t.fieldRequired;
+    if (formState.maxTemp.value === null) newErrors.maxTemp = t.fieldRequiredOnly;
+    if (formState.safetyFactor.value === null || formState.safetyFactor.value <= 0) newErrors.safetyFactor = t.fieldRequired;
+    if (formState.tankVolume.value === null || formState.tankVolume.value <= 0) newErrors.tankVolume = t.fieldRequired;
+    if (formState.tempSwing.value === null || formState.tempSwing.value <= 0) newErrors.tempSwing = t.fieldRequired;
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,103 +130,103 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) =
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4 border-b border-[var(--color-border)] pb-2">Working Losses (Loading)</h2>
-        <p className="text-xs text-[var(--color-text-secondary)] -mt-3 mb-3">Determines the suggested VRU size based on maximum operational flow.</p>
+        <h2 className="text-xl font-semibold text-(--color-text-primary) mb-4 border-b border-(--color-border) pb-2">{t.workingLossesTitle}</h2>
+        <p className="text-xs text-(--color-text-secondary) -mt-3 mb-3">{t.workingLossesDesc}</p>
         <CalculatorUnitField
             id="deliveryRate"
-            label="Max Delivery Rate"
+            label={t.maxDeliveryRate}
             value={formState.deliveryRate.value}
             onValueChange={(val) => handleValueChange('deliveryRate', val)}
             unit={formState.deliveryRate.unit}
             onUnitChange={(unit) => handleUnitChange('deliveryRate', unit)}
             units={['LPM', 'GPM']}
             error={errors.deliveryRate}
-            placeholder="e.g., 1900"
+            placeholder={t.ph_deliveryRate}
         />
         <CalculatorUnitField
             id="simulOps"
-            label="Max Simultaneous Operations"
+            label={t.maxSimultaneousOps}
             value={formState.simulOps.value}
             onValueChange={(val) => handleValueChange('simulOps', val)}
             units={['Integer']}
             error={errors.simulOps}
-            placeholder="e.g., 2"
+            placeholder={t.ph_simulOps}
             isInteger={true}
         />
          <CalculatorUnitField
             id="rvp"
-            label="Highest RVP"
+            label={t.highestRVP}
             value={formState.rvp.value}
             onValueChange={(val) => handleValueChange('rvp', val)}
             unit={formState.rvp.unit}
             onUnitChange={(unit) => handleUnitChange('rvp', unit)}
             units={['bar', 'psi']}
             error={errors.rvp}
-            placeholder="e.g., 0.7"
+            placeholder={t.ph_rvp}
         />
         <CalculatorUnitField
             id="maxTemp"
-            label="Max Product Temperature"
+            label={t.maxProductTemp}
             value={formState.maxTemp.value}
             onValueChange={(val) => handleValueChange('maxTemp', val)}
             unit={formState.maxTemp.unit}
             onUnitChange={(unit) => handleUnitChange('maxTemp', unit)}
             units={['°C', '°F']}
             error={errors.maxTemp}
-            placeholder="e.g., 35"
+            placeholder={t.ph_temp}
         />
         <div className="mb-4">
-            <label htmlFor="calculated-factor" className="block text-sm font-medium text-[var(--color-text-tertiary)] mb-1">Calculated Vapor Volume Factor</label>
+            <label htmlFor="calculated-factor" className="block text-sm font-medium text-(--color-text-tertiary) mb-1">{t.calculatedVaporFactor}</label>
             <div className="relative">
-                <input id="calculated-factor" type="text" readOnly value={calculatedFactor.toFixed(3)} className="w-full pl-3 pr-16 py-2 border border-[var(--color-border)] rounded-md bg-[var(--color-panel-alt-bg)] text-[var(--color-text-primary)] font-medium cursor-not-allowed"/>
+                <input id="calculated-factor" type="text" readOnly value={calculatedFactor.toFixed(3)} className="w-full pl-3 pr-16 py-2 border border-(--color-border) rounded-md bg-(--color-panel-alt-bg) text-(--color-text-primary) font-medium cursor-not-allowed"/>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-[var(--color-text-secondary)] text-sm">(ratio)</span>
+                    <span className="text-(--color-text-secondary) text-sm">(ratio)</span>
                 </div>
             </div>
         </div>
         <CalculatorUnitField
             id="safetyFactor"
-            label="Safety Factor"
+            label={t.safetyFactor}
             value={formState.safetyFactor.value}
             onValueChange={(val) => handleValueChange('safetyFactor', val)}
             units={['%']}
             error={errors.safetyFactor}
-            placeholder="e.g., 125"
+            placeholder={t.ph_safetyFactor}
         />
       </div>
 
        <div>
-        <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4 border-b border-[var(--color-border)] pb-2">Breathing Losses (Storage)</h2>
-        <p className="text-xs text-[var(--color-text-secondary)] -mt-3 mb-3">Determines the minimum VRU size based on thermal vapor expansion.</p>
+        <h2 className="text-xl font-semibold text-(--color-text-primary) mb-4 border-b border-(--color-border) pb-2">{t.breathingLossesTitle}</h2>
+        <p className="text-xs text-(--color-text-secondary) -mt-3 mb-3">{t.breathingLossesDesc}</p>
         <CalculatorUnitField
             id="tankVolume"
-            label="Total Tank Volume"
+            label={t.totalTankVolume}
             value={formState.tankVolume.value}
             onValueChange={(val) => handleValueChange('tankVolume', val)}
             unit={formState.tankVolume.unit}
             onUnitChange={(unit) => handleUnitChange('tankVolume', unit)}
             units={['m³', 'gal', 'bbl']}
-            placeholder="e.g., 75"
+            placeholder={t.ph_tankVolume}
             error={errors.tankVolume}
         />
         <CalculatorUnitField
             id="tempSwing"
-            label="Avg. Daily Temperature Swing"
+            label={t.avgDailyTempSwing}
             value={formState.tempSwing.value}
             onValueChange={(val) => handleValueChange('tempSwing', val)}
             unit={formState.tempSwing.unit}
             onUnitChange={(unit) => handleUnitChange('tempSwing', unit)}
             units={['°C', '°F']}
-            placeholder="e.g., 15"
+            placeholder={t.ph_tempSwing}
             error={errors.tempSwing}
         />
       </div>
 
       <button
         type="submit"
-        className="w-full bg-[var(--color-accent-primary)] text-[var(--color-accent-text)] font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent-primary)]/50 transition-all duration-300 shadow-md hover:shadow-lg"
+        className="w-full bg-(--color-accent-primary) text-(--color-accent-text) font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-(--color-accent-primary)/50 transition-all duration-300 shadow-md hover:shadow-lg"
       >
-        Calculate VRU Capacity
+        {t.calculateBtn}
       </button>
     </form>
   );

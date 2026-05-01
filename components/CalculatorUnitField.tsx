@@ -30,7 +30,7 @@ export const CalculatorUnitField: React.FC<CalculatorUnitFieldProps> = ({
 
   return (
     <div className="mb-4">
-      <label htmlFor={id} className="block text-sm font-medium text-[var(--color-text-tertiary)] mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-(--color-text-tertiary) mb-1">
         {label}
       </label>
       <div className="relative flex items-stretch">
@@ -43,24 +43,24 @@ export const CalculatorUnitField: React.FC<CalculatorUnitFieldProps> = ({
           placeholder={placeholder}
           step={isInteger ? "1" : "any"}
           min="0"
-          className={`w-full pl-3 py-2 border shadow-sm focus:z-10 transition duration-150 ease-in-out bg-[var(--color-input-bg)] text-[var(--color-text-primary)] ${
+          className={`w-full pl-3 py-2 border shadow-sm focus:z-10 transition duration-150 ease-in-out bg-(--color-input-bg) text-(--color-text-primary) ${
             hasUnits ? 'rounded-l-md' : 'rounded-md'
           } ${
             error
-              ? 'border-[var(--color-error)] focus:ring-[var(--color-error)] focus:border-[var(--color-error)]'
-              : 'border-[var(--color-border)] focus:ring-[var(--color-input-focus-ring)] focus:border-[var(--color-input-focus-ring)]'
+              ? 'border-(--color-error) focus:ring-(--color-error) focus:border-(--color-error)'
+              : 'border-(--color-border) focus:ring-(--color-input-focus-ring) focus:border-(--color-input-focus-ring)'
           }`}
           aria-describedby={error ? `${id}-error` : undefined}
         />
         <div className={`absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none ${hasUnits ? 'hidden' : ''}`}>
-           <span className="text-[var(--color-text-secondary)] text-sm">{units[0]}</span>
+           <span className="text-(--color-text-secondary) text-sm">{units[0]}</span>
         </div>
         {hasUnits && onUnitChange && (
           <select
             aria-label="Unit"
             value={unit}
             onChange={(e) => onUnitChange(e.target.value)}
-            className="relative -ml-px inline-flex items-center px-4 py-2 border border-[var(--color-border)] text-sm font-medium rounded-r-md text-[var(--color-text-tertiary)] bg-[var(--color-panel-alt-bg)] hover:bg-[var(--color-panel-alt-bg)]/80 focus:outline-none focus:ring-1 focus:ring-[var(--color-input-focus-ring)] focus:border-[var(--color-input-focus-ring)]"
+            className="relative -ml-px inline-flex items-center px-4 py-2 border border-(--color-border) text-sm font-medium rounded-r-md text-(--color-text-tertiary) bg-(--color-panel-alt-bg) hover:bg-(--color-panel-alt-bg)/80 focus:outline-none focus:ring-1 focus:ring-(--color-input-focus-ring) focus:border-(--color-input-focus-ring)"
           >
             {units.map(u => (
               <option key={u} value={u}>{u}</option>
@@ -69,7 +69,7 @@ export const CalculatorUnitField: React.FC<CalculatorUnitFieldProps> = ({
         )}
       </div>
       {error && (
-        <p id={`${id}-error`} className="mt-1 text-xs text-[var(--color-error)]">
+        <p id={`${id}-error`} className="mt-1 text-xs text-(--color-error)">
           {error}
         </p>
       )}

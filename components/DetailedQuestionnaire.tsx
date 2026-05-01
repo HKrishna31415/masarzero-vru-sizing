@@ -1,813 +1,599 @@
-
 import React, { useState } from 'react';
 import { QuestionnaireField } from './QuestionnaireField';
 import { SelectField } from './SelectField';
 import { UnitInputField } from './UnitInputField';
 import { SplitUnitInputField } from './SplitUnitInputField';
 import { TankInventoryManager } from './TankInventoryManager';
+import { useLang } from '../LanguageContext';
 
-const inputClasses = "w-full pl-3 py-2 border border-[var(--color-border)] rounded-md shadow-sm focus:ring-[var(--color-input-focus-ring)] focus:border-[var(--color-input-focus-ring)] transition duration-150 ease-in-out bg-[var(--color-input-bg)] text-[var(--color-text-primary)]";
+const inputClasses = "w-full pl-3 py-2 border border-(--color-border) rounded-md shadow-sm focus:ring-2 focus:ring-(--color-input-focus-ring) focus:border-(--color-input-focus-ring) transition duration-150 ease-in-out bg-(--color-input-bg) text-(--color-text-primary)";
 
 type UnitFieldState = { value: string; unit: string };
+type FormState = { [key: string]: UnitFieldState };
+const TOTAL_STEPS = 10;
 
-type FormState = {
-  [key: string]: UnitFieldState;
-};
+// ── Progress Bar ──────────────────────────────────────────────────────────────
+const ProgressBar: React.FC<{
+  step: number; total: number; labels: string[];
+  onJump: (s: number) => void;
+  accent: string; accentText: string;
+}> = ({ step, total, labels, onJump, accent, accentText }) => (
+  <div style={{ marginBottom: '0.5rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+      {Array.from({ length: total }).map((_, i) => {
+        const done   = i + 1 < step;
+        const active = i + 1 === step;
+        return (
+          <React.Fragment key={i}>
+            <button
+              type="button"
+              onClick={() => onJump(i + 1)}
+              title={labels[i]}
+              aria-label={`Step ${i + 1}: ${labels[i]}`}
+              style={{
+                width: '2rem', height: '2rem', borderRadius: '9999px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.7rem', fontWeight: 700, flexShrink: 0, cursor: 'pointer',
+                border: done || active ? `2px solid ${accent}` : '2px solid #D1D5DB',
+                backgroundColor: done || active ? accent : '#FFFFFF',
+                color: done || active ? accentText : '#9CA3AF',
+                boxShadow: active ? `0 0 0 4px ${accent}33` : 'none',
+                transform: active ? 'scale(1.18)' : 'scale(1)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {done ? (
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : i + 1}
+            </button>
+            {i < total - 1 && (
+              <div style={{
+                flex: 1, height: '3px',
+                backgroundColor: done ? accent : '#E5E7EB',
+                transition: 'background-color 0.3s ease',
+              }} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  </div>
+);
 
-export const DetailedQuestionnaire: React.FC = () => {
+// ── Nav Buttons ───────────────────────────────────────────────────────────────
+const StepNav: React.FC<{
+  step: number; total: number;
+  onBack: () => void; onNext: () => void; onSubmit: () => void;
+  isGeneratingPdf: boolean;
+  submitLabel: string; generatingLabel: string; backLabel: string; nextLabel: string;
+  accent: string; accentText: string;
+}> = ({ step, total, onBack, onNext, onSubmit, isGeneratingPdf, submitLabel, generatingLabel, backLabel, nextLabel, accent, accentText }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E5E7EB' }}>
+    <button
+      type="button" onClick={onBack} disabled={step === 1}
+      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', borderRadius: '0.5rem', border: '1.5px solid #D1D5DB', color: '#6B7280', backgroundColor: 'transparent', fontWeight: 600, fontSize: '0.875rem', cursor: step === 1 ? 'not-allowed' : 'pointer', opacity: step === 1 ? 0.35 : 1, transition: 'all 0.15s' }}
+    >
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+      </svg>
+      {backLabel}
+    </button>
+
+    {step < total ? (
+      <button
+        type="button" onClick={onNext}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: accent, color: accentText, fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'opacity 0.15s' }}
+      >
+        {nextLabel}
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    ) : (
+      <button
+        type="button" onClick={onSubmit} disabled={isGeneratingPdf}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: accent, color: accentText, fontWeight: 700, fontSize: '0.875rem', cursor: isGeneratingPdf ? 'wait' : 'pointer', opacity: isGeneratingPdf ? 0.6 : 1, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'opacity 0.15s' }}
+      >
+        {isGeneratingPdf ? (
+          <>
+            <svg className="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
+              <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            {generatingLabel}
+          </>
+        ) : (
+          <>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {submitLabel}
+          </>
+        )}
+      </button>
+    )}
+  </div>
+);
+
+// ── Main Component ────────────────────────────────────────────────────────────
+export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company = 'sevali' }) => {
+  const { t, lang } = useLang();
+  // Brand colors hardcoded per company — never driven by CSS variables
+  const brandAccent  = company === 'kosman' ? '#1a4fa0' : '#F5C800';
+  const brandText    = company === 'kosman' ? '#FFFFFF' : '#1a1a1a';
+  const [step, setStep] = useState(1);
   const [classificationSystem, setClassificationSystem] = useState('Class/Division');
   const [storageType, setStorageType] = useState('Truck Filling Station');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  
+
   const [formState, setFormState] = useState<FormState>({
-    dischargePressure: { value: '', unit: 'bar' },
-    ambientTempMax: { value: '', unit: '°C' },
-    ambientTempMin: { value: '', unit: '°C' },
-    blanketingPressure: { value: '', unit: 'mbar' },
+    dischargePressure:    { value: '', unit: 'bar' },
+    ambientTempMax:       { value: '', unit: '°C' },
+    ambientTempMin:       { value: '', unit: '°C' },
+    blanketingPressure:   { value: '', unit: 'mbar' },
     vaporMolecularWeight: { value: '', unit: 'g/mol' },
-    vaporLEL: { value: '', unit: '% by vol' },
-    headerSize: { value: '', unit: 'mm' },
-    pipingLength: { value: '', unit: 'meters' },
-    instrumentAir: { value: '', unit: 'bar' },
-    coolingWaterFlow: { value: '', unit: 'LPM' },
-    coolingWaterTemp: { value: '', unit: '°C' },
+    vaporLEL:             { value: '', unit: '% by vol' },
+    headerSize:           { value: '', unit: 'mm' },
+    pipingLength:         { value: '', unit: 'meters' },
+    instrumentAir:        { value: '', unit: 'bar' },
+    coolingWaterFlow:     { value: '', unit: 'LPM' },
+    coolingWaterTemp:     { value: '', unit: '°C' },
     coolingWaterPressure: { value: '', unit: 'bar' },
-    vocRecovery: { value: '', unit: '%' },
-    noiseLevel: { value: '', unit: 'dBA @ 1m' },
+    vocRecovery:          { value: '', unit: '%' },
+    noiseLevel:           { value: '', unit: 'dBA @ 1m' },
   });
 
-  const handleUnitInputChange = (id: string, field: 'value' | 'unit', val: string) => {
-    setFormState(prev => ({
-        ...prev,
-        [id]: {
-            ...prev[id],
-            [field]: val
-        }
-    }));
-};
+  const ui = (id: string) => ({
+    value: formState[id].value,
+    unit: formState[id].unit,
+    onValueChange: (val: string) => setFormState(p => ({ ...p, [id]: { ...p[id], value: val } })),
+    onUnitChange:  (val: string) => setFormState(p => ({ ...p, [id]: { ...p[id], unit: val } })),
+  });
 
- const handleDownloadPdf = async () => {
+  const stepLabels = [
+    t.s1title, t.s2title, t.s3title, t.s4title, t.s5title,
+    t.s6title, t.s7title, t.s8title, t.s9title, t.s10title,
+  ];
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const goNext = () => { setStep(s => Math.min(s + 1, TOTAL_STEPS)); scrollToTop(); };
+  const goBack = () => { setStep(s => Math.max(s - 1, 1)); scrollToTop(); };
+
+  // ── PDF Generation ──────────────────────────────────────────────────────────
+  const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
-    const formElement = document.getElementById('detailed-questionnaire');
-    if (!formElement) {
-      setIsGeneratingPdf(false);
-      return;
-    }
+    const formElement = document.getElementById('detailed-questionnaire-form');
+    if (!formElement) { setIsGeneratingPdf(false); return; }
 
-    const getBase64Image = (url: string): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    reject(new Error('Could not get canvas context'));
-                    return;
-                }
-                ctx.drawImage(img, 0, 0);
-                const dataURL = canvas.toDataURL('image/png');
-                resolve(dataURL);
-            };
-            img.onerror = reject;
-            img.src = url;
-        });
-    };
-    
+    const getBase64Image = (url: string): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width; canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('no ctx')); return; }
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+
     const logoUrl = 'https://i.ibb.co/Zpx00M2n/sevalitransparentlogo.png';
     const logoBase64 = await getBase64Image(logoUrl);
-    
-    const pdf = new (window as any).jspdf.jsPDF({
-      orientation: 'p',
-      unit: 'mm',
-      format: 'a4',
+    const pdf = new (window as any).jspdf.jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const W = pdf.internal.pageSize.getWidth();
+    const H = pdf.internal.pageSize.getHeight();
+    const m = 15;
+
+    pdf.addImage(logoBase64, 'PNG', (W - 60) / 2, m, 60, 60);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(22); pdf.setTextColor('#1a202c');
+    pdf.text('VRU Specification Report', W / 2, m + 75, { align: 'center' });
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(14); pdf.setTextColor('#4A5568');
+    pdf.text('Preliminary Assessment', W / 2, m + 85, { align: 'center' });
+
+    const projectName = (document.getElementById('projectName') as HTMLInputElement)?.value || 'Not Specified';
+    const siteCity    = (document.getElementById('siteCity') as HTMLInputElement)?.value || '';
+    const siteCountry = (document.getElementById('siteCountry') as HTMLInputElement)?.value || '';
+    const siteLocation = [siteCity, siteCountry].filter(Boolean).join(', ') || 'Not Specified';
+    const contactPerson = (document.getElementById('contactPerson') as HTMLInputElement)?.value || 'Not Specified';
+    const generationDate = new Date().toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const dy = m + 105;
+    pdf.setFontSize(11); pdf.setTextColor('#2D3748');
+    [['Project:', projectName], ['Site:', siteLocation], ['Contact:', contactPerson], ['Date:', generationDate]].forEach(([k, v], i) => {
+      pdf.setFont('helvetica', 'bold'); pdf.text(k, m, dy + i * 10);
+      pdf.setFont('helvetica', 'normal'); pdf.text(v, m + 40, dy + i * 10);
     });
 
-    // --- Cover Page ---
-    const pdfPageWidth = pdf.internal.pageSize.getWidth();
-    const pdfPageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-
-    // Logo
-    const logoWidth = 60;
-    const logoHeight = 60;
-    const logoX = (pdfPageWidth - logoWidth) / 2;
-    pdf.addImage(logoBase64, 'PNG', logoX, margin, logoWidth, logoHeight);
-
-    // Title
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(22);
-    pdf.setTextColor('#1a202c');
-    pdf.text('VRU Specification Report', pdfPageWidth / 2, margin + logoHeight + 15, { align: 'center' });
-
-    // Subtitle
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(14);
-    pdf.setTextColor('#4A5568');
-    pdf.text('Preliminary Assessment', pdfPageWidth / 2, margin + logoHeight + 25, { align: 'center' });
-
-    // Project Details from Form
-    const projectName = (document.getElementById('projectName') as HTMLInputElement)?.value || 'Not Specified';
-    const siteCity = (document.getElementById('siteCity') as HTMLInputElement)?.value || '';
-    const siteCountry = (document.getElementById('siteCountry') as HTMLInputElement)?.value || '';
-    let siteLocation = [siteCity, siteCountry].filter(Boolean).join(', ');
-    if (!siteLocation) siteLocation = 'Not Specified';
-
-    const contactPerson = (document.getElementById('contactPerson') as HTMLInputElement)?.value || 'Not Specified';
-    const generationDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    const detailsStartY = margin + logoHeight + 45;
-    pdf.setFontSize(11);
-    pdf.setTextColor('#2D3748');
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Project:', margin, detailsStartY);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(projectName, margin + 40, detailsStartY);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Site Location:', margin, detailsStartY + 10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(siteLocation, margin + 40, detailsStartY + 10);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Contact:', margin, detailsStartY + 20);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(contactPerson, margin + 40, detailsStartY + 20);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Date Generated:', margin, detailsStartY + 30);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(generationDate, margin + 40, detailsStartY + 30);
-
-    // Disclaimer
-    const disclaimerText = "This report is a preliminary assessment based on the data provided. The information contained herein is for discussion purposes only and should not be considered a final engineering specification. A qualified engineer must be consulted for a detailed design and final equipment selection.";
-    pdf.setFontSize(9);
-    pdf.setTextColor('#6B7280');
-    const splitDisclaimer = pdf.splitTextToSize(disclaimerText, pdfPageWidth - (margin * 2));
-    pdf.text(splitDisclaimer, margin, pdfPageHeight - margin - 20);
-    
-    // Add page for questionnaire content
+    const disclaimer = 'This report is a preliminary assessment based on the data provided. It is for discussion purposes only and should not be considered a final engineering specification. A qualified engineer must be consulted for detailed design.';
+    pdf.setFontSize(9); pdf.setTextColor('#6B7280');
+    pdf.text(pdf.splitTextToSize(disclaimer, W - m * 2), m, H - m - 20);
     pdf.addPage();
 
-
-    // Create a temporary container for a print-friendly version of the form data
+    // Render all sections into a hidden container
     const printContainer = document.createElement('div');
-    printContainer.style.position = 'absolute';
-    printContainer.style.left = '-9999px';
-    printContainer.style.width = '210mm'; // A4 width
-    printContainer.style.boxSizing = 'border-box';
-
+    printContainer.style.cssText = 'position:absolute;left:-9999px;width:210mm;box-sizing:border-box;';
     const style = document.createElement('style');
-    style.innerHTML = `
-      .pdf-print-area { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; color: #2D3748; background: white; padding: 15mm; }
-      .pdf-print-area .pdf-header { text-align: center; margin-bottom: 1rem; }
-      .pdf-print-area .pdf-header img { max-height: 80px; display: inline-block; }
-      .pdf-print-area h1 { font-size: 1.75rem; font-weight: 700; text-align: center; margin-bottom: 1.5rem; color: #1a202c; word-wrap: break-word; }
-      .pdf-print-area h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; color: #1a202c;}
-      .pdf-print-area h3 { font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
-      .pdf-print-area .entry { display: grid; grid-template-columns: 200px 1fr; gap: 1rem; align-items: start; padding: 0.6rem 0; border-bottom: 1px solid #f1f5f9; }
-      .pdf-print-area .entry-full { padding: 0.6rem 0; border-bottom: 1px solid #f1f5f9; }
-      .pdf-print-area .entry-label { font-weight: 600; font-size: 0.875rem; color: #4A5568; }
-      .pdf-print-area .entry-value { font-size: 0.875rem; white-space: pre-wrap; word-break: break-word; }
-      .pdf-print-area .tank-group { margin-top: 1rem; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: #f8fafc; page-break-inside: avoid; }
-      .pdf-print-area .info-box { margin-top: 1rem; padding: 1rem; background: #fefcbf; border-left: 4px solid #facc15; color: #713f12; font-size: 0.875rem; }
-    `;
-    printContainer.className = 'pdf-print-area';
+    style.innerHTML = '.ppa{font-family:sans-serif;color:#2D3748;background:white;padding:15mm}.ppa h2{font-size:1.1rem;font-weight:700;margin:1.5rem 0 0.75rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.4rem}.ppa .row{display:grid;grid-template-columns:180px 1fr;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid #f1f5f9;font-size:0.8rem}.ppa .lbl{font-weight:600;color:#4A5568}.ppa .val{color:#2D3748}';
+    printContainer.className = 'ppa';
     document.head.appendChild(style);
     document.body.appendChild(printContainer);
 
-    // Add PDF Header
-    const headerDiv = document.createElement('div');
-    headerDiv.className = 'pdf-header';
-    const headerImg = document.createElement('img');
-    headerImg.src = logoUrl;
-    headerDiv.appendChild(headerImg);
-    printContainer.appendChild(headerDiv);
-
-    // Helper to add an entry if the value exists
-    const addEntry = (container: HTMLElement, label: string | null, value: string | null, isFullWidth = false) => {
-      if (!label || !value || value.trim() === '') return;
-      
-      const entryDiv = document.createElement('div');
-      entryDiv.className = isFullWidth ? 'entry-full' : 'entry';
-      
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'entry-label';
-      labelSpan.textContent = label;
-      entryDiv.appendChild(labelSpan);
-
-      const valueSpan = document.createElement(isFullWidth ? 'p' : 'span');
-      valueSpan.className = 'entry-value';
-      valueSpan.textContent = value;
-      entryDiv.appendChild(valueSpan);
-
-      container.appendChild(entryDiv);
+    const addEntry = (label: string, value: string) => {
+      if (!value?.trim()) return;
+      const row = document.createElement('div'); row.className = 'row';
+      const l = document.createElement('span'); l.className = 'lbl'; l.textContent = label;
+      const v = document.createElement('span'); v.className = 'val'; v.textContent = value;
+      row.appendChild(l); row.appendChild(v); printContainer.appendChild(row);
     };
 
-    const title = document.createElement('h1');
-    title.textContent = 'VRU Specification Questionnaire';
-    printContainer.appendChild(title);
+    const h1 = document.createElement('h1');
+    h1.style.cssText = 'font-size:1.4rem;font-weight:700;text-align:center;margin-bottom:1rem';
+    h1.textContent = 'VRU Specification Questionnaire';
+    printContainer.appendChild(h1);
 
     const fieldsets = formElement.querySelectorAll('fieldset');
     fieldsets.forEach(fieldset => {
       const legend = fieldset.querySelector('legend');
       if (legend) {
-        const h2 = document.createElement('h2');
-        h2.textContent = legend.textContent;
+        const h2 = document.createElement('h2'); h2.textContent = legend.textContent || '';
         printContainer.appendChild(h2);
       }
-      
-      const tankManager = fieldset.querySelector('.space-y-8');
-      if (tankManager) {
-        const tankGroups = tankManager.querySelectorAll<HTMLElement>('.p-4.border');
-        tankGroups.forEach((tankGroup, index) => {
-          const tankContainer = document.createElement('div');
-          tankContainer.className = 'tank-group';
-
-          const tankIdInput = tankGroup.querySelector<HTMLInputElement>('input[id^="tankId-"]');
-          const tankTitle = document.createElement('h3');
-          tankTitle.textContent = `Tank #${index + 1}: ${tankIdInput?.value || '(Not specified)'}`;
-          tankContainer.appendChild(tankTitle);
-
-          const fieldWrappers = tankGroup.querySelectorAll<HTMLElement>('.mb-4');
-          fieldWrappers.forEach(wrapper => {
-            const labelEl = wrapper.querySelector('label');
-            const input = wrapper.querySelector<HTMLInputElement>('input');
-            const select = wrapper.querySelector<HTMLSelectElement>('select');
-            
-            let label = labelEl?.textContent || '';
-            let value: string | null = null;
-            
-            const unitInput = wrapper.querySelector<HTMLInputElement>('input[type="number"]');
-            const unitSelect = wrapper.querySelector<HTMLSelectElement>('select');
-
-            if (unitInput && unitSelect) { // UnitInputField
-              if (unitInput.value) value = `${unitInput.value} ${unitSelect.value}`;
-            } else if (select) { // SelectField
-              value = select.value;
-            } else if (input) { // Simple input
-              value = input.value;
-            }
-            addEntry(tankContainer, label, value);
-          });
-          printContainer.appendChild(tankContainer);
-        });
-        return;
-      }
-      
-      const fieldWrappers = fieldset.querySelectorAll<HTMLElement>('.mb-4');
-      fieldWrappers.forEach(wrapper => {
-        const labelEl = wrapper.querySelector('label');
-        const input = wrapper.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([type="radio"]):not([type="checkbox"]), textarea');
-        const select = wrapper.querySelector<HTMLSelectElement>('select');
-        let label = labelEl?.textContent || '';
-        let value: string | null = null;
-        let isFullWidth = !!wrapper.querySelector('textarea');
-        
-        const splitInputs = wrapper.querySelectorAll<HTMLInputElement>('input[type="number"]');
-        
-        if (splitInputs.length === 2 && select) {
-          const pos = splitInputs[0].value || 'N/A';
-          const neg = splitInputs[1].value || 'N/A';
-          if (pos !== 'N/A' || neg !== 'N/A') value = `${pos} / ${neg} ${select.value}`;
-        } else if (splitInputs.length === 1 && select) {
-          if (splitInputs[0].value) value = `${splitInputs[0].value} ${select.value}`;
-        } else if (select) {
-          value = select.value;
-        } else if (input) {
-          value = input.value;
-          if (input.type === 'date' && value) {
-             const [year, month, day] = value.split('-');
-             value = `${month}/${day}/${year}`;
+      fieldset.querySelectorAll<HTMLElement>('.mb-4').forEach(wrapper => {
+        const label = wrapper.querySelector('label')?.textContent || '';
+        const numInputs = wrapper.querySelectorAll<HTMLInputElement>('input[type="number"]');
+        const sel = wrapper.querySelector<HTMLSelectElement>('select');
+        const inp = wrapper.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([type="number"]), textarea');
+        let value = '';
+        if (numInputs.length === 2 && sel) {
+          const a = numInputs[0].value, b = numInputs[1].value;
+          if (a || b) value = `${a || 'N/A'} / ${b || 'N/A'} ${sel.value}`;
+        } else if (numInputs.length === 1 && sel) {
+          if (numInputs[0].value) value = `${numInputs[0].value} ${sel.value}`;
+        } else if (sel) { value = sel.value; }
+        else if (inp) {
+          value = inp.value;
+          if ((inp as HTMLInputElement).type === 'date' && value) {
+            const [y, mo, d] = value.split('-');
+            value = lang === 'zh' ? `${d}/${mo}/${y}` : `${mo}/${d}/${y}`;
           }
         }
-        
-        const infoBox = wrapper.querySelector('.p-4.bg-\\[var\\(--color-info-bg\\)\\]');
-        if (infoBox) {
-          const infoText = infoBox.querySelector('p')?.textContent;
-          if (infoText) {
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'info-box';
-            infoDiv.textContent = infoText;
-            printContainer.appendChild(infoDiv);
-          }
-        } else {
-            addEntry(printContainer, label, value, isFullWidth);
-        }
+        addEntry(label, value);
       });
     });
 
     const canvas = await (window as any).html2canvas(printContainer, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    
     document.body.removeChild(printContainer);
     document.head.removeChild(style);
 
-    const pdfContentWidth = pdfPageWidth - margin * 2;
-    const pdfContentHeight = pdfPageHeight - margin * 2;
-    
-    const canvasAspectRatio = canvas.width / canvas.height;
-    const totalImageHeightOnPdf = pdfContentWidth / canvasAspectRatio;
-
-    let position = 0;
-    pdf.addImage(imgData, 'PNG', margin, margin, pdfContentWidth, totalImageHeightOnPdf);
-    let heightLeft = totalImageHeightOnPdf - pdfContentHeight;
-
-    while (heightLeft > 0) {
-      position -= pdfContentHeight;
+    const imgData = canvas.toDataURL('image/png');
+    const cw = W - m * 2;
+    const ch = cw / (canvas.width / canvas.height);
+    let pos = 0;
+    pdf.addImage(imgData, 'PNG', m, m, cw, ch);
+    let left = ch - (H - m * 2);
+    while (left > 0) {
+      pos -= (H - m * 2);
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', margin, position + margin, pdfContentWidth, totalImageHeightOnPdf);
-      heightLeft -= pdfContentHeight;
+      pdf.addImage(imgData, 'PNG', m, pos + m, cw, ch);
+      left -= (H - m * 2);
     }
-    
-    const pageCount = pdf.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        pdf.setPage(i);
 
-        pdf.setFontSize(8);
-        pdf.setTextColor(100);
-
-        // Footer content
-        const footerY1 = pdfPageHeight - 12;
-        const footerY2 = pdfPageHeight - 8;
-
-        // Contact Info - Left aligned on all pages
-        pdf.text('CEO: Mr. Yalçin Aliyev', margin, footerY1);
-        pdf.text('Phone: +994 55 320 42 81', margin, footerY2);
-
-        // Copyright & Disclaimer - Right aligned on all pages
-        const footerText1 = `© ${new Date().getFullYear()} Sevali Energy. All rights reserved.`;
-        const footerText2 = `For official use, consult a qualified engineer.`;
-        pdf.text(footerText1, pdfPageWidth - margin, footerY1, { align: 'right' });
-        pdf.text(footerText2, pdfPageWidth - margin, footerY2, { align: 'right' });
+    const pages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8); pdf.setTextColor(100);
+      pdf.text('CEO: Mr. Yalçin Aliyev', m, H - 12);
+      pdf.text('Phone: +994 55 320 42 81', m, H - 8);
+      pdf.text(`© ${new Date().getFullYear()} Sevali Energy. All rights reserved.`, W - m, H - 12, { align: 'right' });
+      pdf.text('For official use, consult a qualified engineer.', W - m, H - 8, { align: 'right' });
     }
-    
+
     pdf.save('VRU_Questionnaire_Report.pdf');
     setIsGeneratingPdf(false);
   };
 
-
-  return (
-    <div id="detailed-questionnaire" className="mt-2">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-[var(--color-text-primary)]">Detailed VRU Specification</h2>
-        <p className="text-center text-[var(--color-text-secondary)] mt-2 max-w-3xl mx-auto">
-          This section helps gather additional information for a more precise VRU system design. Fill out the fields below to provide our engineers with the necessary context for your project.
-        </p>
-      </div>
-      <form className="space-y-10">
-        
+  // ── Step Sections ────────────────────────────────────────────────────────────
+  const renderStep = () => {
+    switch (step) {
+      case 1: return (
         <fieldset>
-            <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">1. Project Information</legend>
-            <div className="grid md:grid-cols-2 gap-x-6">
-                 <QuestionnaireField label="Project Name / ID" description="A unique identifier for this project.">
-                    <input id="projectName" type="text" className={inputClasses} placeholder="e.g., Tank Farm Expansion 2024" />
-                </QuestionnaireField>
-                <QuestionnaireField label="Country" description="The country where the site is located.">
-                    <input id="siteCountry" type="text" className={inputClasses} placeholder="e.g., USA" />
-                </QuestionnaireField>
-                 <QuestionnaireField label="City / State" description="The city and state/province of the site.">
-                    <input id="siteCity" type="text" className={inputClasses} placeholder="e.g., Houston, TX" />
-                </QuestionnaireField>
-                 <QuestionnaireField label="Street Address" description="Full street address of the project site.">
-                    <input id="siteAddress" type="text" className={inputClasses} placeholder="e.g., 123 Industrial Way" />
-                </QuestionnaireField>
-                <QuestionnaireField label="Contact Person" description="Primary technical or project contact.">
-                    <input id="contactPerson" type="text" className={inputClasses} placeholder="e.g., Jane Doe" />
-                </QuestionnaireField>
-                <QuestionnaireField label="Contact Email" description="Email for project communications.">
-                    <input id="contactEmail" type="email" className={inputClasses} placeholder="e.g., jane.doe@example.com" />
-                </QuestionnaireField>
-                 <QuestionnaireField label="Project Start Date" description="Expected start date.">
-                    <input id="projectStartDate" type="date" className={inputClasses} />
-                </QuestionnaireField>
-                <QuestionnaireField label="Project Completion Date" description="Target completion date.">
-                    <input id="projectEndDate" type="date" className={inputClasses} />
-                </QuestionnaireField>
-            </div>
+          <legend className="sr-only">{t.s1title}</legend>
+          <div className="form-grid">
+            <QuestionnaireField label={t.projectNameId} description={t.projectNameDesc}>
+              <input id="projectName" type="text" placeholder={t.ph_projectName} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.country} description={t.countryDesc}>
+              <input id="siteCountry" type="text" placeholder={t.ph_country} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.cityState} description={t.cityStateDesc}>
+              <input id="siteCity" type="text" placeholder={t.ph_city} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.streetAddress} description={t.streetAddressDesc}>
+              <input id="siteAddress" type="text" placeholder={t.ph_address} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.contactPerson} description={t.contactPersonDesc}>
+              <input id="contactPerson" type="text" placeholder={t.ph_contact} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.contactEmail} description={t.contactEmailDesc}>
+              <input id="contactEmail" type="email" placeholder={t.ph_email} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.projectStartDate} description={t.projectStartDateDesc}>
+              <input id="projectStartDate" type="date" style={{ direction: 'ltr' }} />
+            </QuestionnaireField>
+            <QuestionnaireField label={t.projectEndDate} description={t.projectEndDateDesc}>
+              <input id="projectEndDate" type="date" style={{ direction: 'ltr' }} />
+            </QuestionnaireField>
+          </div>
         </fieldset>
+      );
 
+      case 2: return (
         <fieldset>
-          <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">2. Operational Conditions</legend>
-          <div className="grid md:grid-cols-2 gap-x-6">
-            <SelectField
-                id="storageType"
-                label="What type of storage is this?"
-                description="Select the primary function of the facility."
-                options={["Truck Filling Station", "Tank Farm", "Refinery", "Bulk GDF", "Storage Facility", "Other"]}
-                value={storageType}
-                onChange={(e) => setStorageType(e.target.value)}
-            />
+          <legend className="sr-only">{t.s2title}</legend>
+          <div className="form-grid">
+            <SelectField id="storageType" label={t.storageTypeLabel} description={t.storageTypeDesc}
+              options={t.storageTypes as unknown as string[]} value={storageType} onChange={e => setStorageType(e.target.value)} />
             {storageType === 'Other' && (
-                <QuestionnaireField label="Please specify other storage type" description="">
-                    <input id="storageTypeOther" type="text" className={inputClasses} placeholder="e.g., Marine Terminal" />
-                </QuestionnaireField>
-            )}
-            <SelectField
-                id="deliveryMethod"
-                label="Delivery Method"
-                description="How is the product delivered to the tanks?"
-                options={["Truck", "Railcar", "Pipeline", "Barge / Marine", "Other"]}
-            />
-            <SelectField
-                id="loadingMethod"
-                label="Loading Method"
-                description="The method used to fill the tanks."
-                options={["Top Splash Loading", "Submerged Fill Pipe", "Bottom Loading"]}
-            />
-            <QuestionnaireField label="Loading Frequency" description="Number of loading events per day.">
-                <div className="relative">
-                    <input id="loadingFrequency" type="number" step="1" className={`${inputClasses} pr-20`} placeholder="e.g., 5" />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-[var(--color-text-secondary)] text-sm">trucks/day</span>
-                    </div>
-                </div>
-            </QuestionnaireField>
-            <UnitInputField
-                id="dischargePressure"
-                label="VRU Discharge Pressure"
-                description="Specify the pressure at the VRU outlet."
-                units={["bar", "psig", "kPa"]}
-                placeholder="e.g., 0.35"
-                value={formState.dischargePressure.value}
-                unit={formState.dischargePressure.unit}
-                onValueChange={(val) => handleUnitInputChange('dischargePressure', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('dischargePressure', 'unit', val)}
-            />
-            <UnitInputField
-                id="ambientTempMax"
-                label="Maximum Ambient Temperature"
-                description="Highest expected environmental temperature at the site."
-                units={["°C", "°F"]}
-                placeholder="e.g., 35"
-                value={formState.ambientTempMax.value}
-                unit={formState.ambientTempMax.unit}
-                onValueChange={(val) => handleUnitInputChange('ambientTempMax', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('ambientTempMax', 'unit', val)}
-            />
-            <UnitInputField
-                id="ambientTempMin"
-                label="Minimum Ambient Temperature"
-                description="Lowest expected environmental temperature."
-                units={["°C", "°F"]}
-                placeholder="e.g., -10"
-                value={formState.ambientTempMin.value}
-                unit={formState.ambientTempMin.unit}
-                onValueChange={(val) => handleUnitInputChange('ambientTempMin', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('ambientTempMin', 'unit', val)}
-            />
-          </div>
-        </fieldset>
-        
-        <fieldset>
-          <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">3. Tank & Inventory Details</legend>
-          <TankInventoryManager />
-          <div className="grid md:grid-cols-2 gap-x-6 mt-6">
-            <SelectField
-                id="tankBlanketing"
-                label="Are tanks gas blanketed?"
-                description="Is an inert gas used to cover the liquid?"
-                options={["No", "Yes", "Not Applicable"]}
-            />
-            <div>
-                 <SelectField
-                    id="blanketingGasType"
-                    label="Blanketing Gas Type"
-                    description="If yes, specify gas."
-                    options={["Nitrogen", "Carbon Dioxide", "Natural Gas", "Other"]}
-                />
-                <UnitInputField
-                    id="blanketingPressure"
-                    label="Blanketing Gas Pressure"
-                    description="Specify set pressure."
-                    units={["mbar", "in WC", "Pa"]}
-                    placeholder="e.g., 1.25"
-                    value={formState.blanketingPressure.value}
-                    unit={formState.blanketingPressure.unit}
-                    onValueChange={(val) => handleUnitInputChange('blanketingPressure', 'value', val)}
-                    onUnitChange={(val) => handleUnitInputChange('blanketingPressure', 'unit', val)}
-                />
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">4. Vapor & Product Characteristics</legend>
-           <QuestionnaireField
-            label="Headspace Vapor Composition (GC Analysis)"
-            description="If available, provide the gas chromatograph analysis of the vapor."
-          >
-            <textarea
-              id="gcAnalysis"
-              rows={4}
-              className={`${inputClasses} min-h-[80px]`}
-              placeholder="e.g., VOCs (C4-C10): 95%, Methane: 4%, H2S: <1 ppm, Benzene: 1.1%"
-            />
-          </QuestionnaireField>
-          <div className="grid md:grid-cols-2 gap-x-6">
-              <QuestionnaireField label="Corrosive Components" description="Any known corrosive elements in the vapor. Note: trace H2S can be corrosive to carbon steel.">
-                <input id="corrosiveComponents" type="text" className={inputClasses} placeholder="e.g., H2S, Ammonia, Chlorides" />
+              <QuestionnaireField label={t.specifyOtherStorage} description="">
+                <input id="storageTypeOther" type="text" placeholder={t.ph_marineTerminal} />
               </QuestionnaireField>
-              <SelectField
-                  id="vaporSaturation"
-                  label="Is vapor stream saturated with water?"
-                  description="Expected moisture content. Note: vapor is often saturated with water for gasoline, especially with ethanol blends."
-                  options={["Unknown", "Yes", "No"]}
-              />
-               <UnitInputField
-                id="vaporMolecularWeight"
-                label="Vapor Molecular Weight"
-                description="Average molecular weight of the vapor stream."
-                units={["g/mol"]}
-                placeholder="e.g., 65"
-                value={formState.vaporMolecularWeight.value}
-                unit={formState.vaporMolecularWeight.unit}
-                onValueChange={(val) => handleUnitInputChange('vaporMolecularWeight', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('vaporMolecularWeight', 'unit', val)}
-              />
-              <UnitInputField
-                id="vaporLEL"
-                label="Vapor Lower Explosive Limit (LEL)"
-                description="The lowest concentration that will burn in air."
-                units={["% by vol"]}
-                placeholder="e.g., 1.4"
-                value={formState.vaporLEL.value}
-                unit={formState.vaporLEL.unit}
-                onValueChange={(val) => handleUnitInputChange('vaporLEL', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('vaporLEL', 'unit', val)}
-              />
+            )}
+            <SelectField id="deliveryMethod" label={t.deliveryMethod} description={t.deliveryMethodDesc}
+              options={t.deliveryMethods as unknown as string[]} />
+            <SelectField id="loadingMethod" label={t.loadingMethod} description={t.loadingMethodDesc}
+              options={t.loadingMethods as unknown as string[]} />
+            <QuestionnaireField label={t.loadingFrequency} description={t.loadingFrequencyDesc}>
+              <div style={{ position: "relative" }}>
+                <input id="loadingFrequency" type="number" step="1" placeholder={t.ph_loadingFreq} />
+                <div style={{ position: "absolute", inset: "0 0 0 auto", right: "0.75rem", display: "flex", alignItems: "center", pointerEvents: "none" }}>
+                  <span style={{ fontSize: "0.8rem", color: "#6B7280" }}>{t.truckDay}</span>
+                </div>
+              </div>
+            </QuestionnaireField>
+            <UnitInputField id="dischargePressure" label={t.dischargePressure} description={t.dischargePressureDesc}
+              units={['bar', 'psig', 'kPa']} placeholder={t.ph_dischargePressure} {...ui('dischargePressure')} />
+            <UnitInputField id="ambientTempMax" label={t.maxAmbientTemp} description={t.maxAmbientTempDesc}
+              units={['°C', '°F']} placeholder={t.ph_tempMax} {...ui('ambientTempMax')} />
+            <UnitInputField id="ambientTempMin" label={t.minAmbientTemp} description={t.minAmbientTempDesc}
+              units={['°C', '°F']} placeholder={t.ph_tempMin} {...ui('ambientTempMin')} />
           </div>
         </fieldset>
-        
+      );
+
+      case 3: return (
         <fieldset>
-          <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">5. System & Equipment Specifications</legend>
-          <div className="grid md:grid-cols-2 gap-x-6">
-            <UnitInputField
-                id="headerSize"
-                label="Proposed Vapor Header Diameter"
-                description="Specify pipe nominal size."
-                units={["mm", "inches"]}
-                placeholder="e.g., 150"
-                value={formState.headerSize.value}
-                unit={formState.headerSize.unit}
-                onValueChange={(val) => handleUnitInputChange('headerSize', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('headerSize', 'unit', val)}
-            />
-             <UnitInputField
-                id="pipingLength"
-                label="Total Length of Vapor Piping"
-                description="Estimated total length from tanks to VRU."
-                units={["meters", "feet"]}
-                placeholder="e.g., 150"
-                value={formState.pipingLength.value}
-                unit={formState.pipingLength.unit}
-                onValueChange={(val) => handleUnitInputChange('pipingLength', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('pipingLength', 'unit', val)}
-            />
-            <SplitUnitInputField
-                id="ventSetPoints"
-                label="Tank P/V Vent Valve Set Points"
-                description="Pressure (+) and vacuum (-) relief settings."
-                units={["mbar", "in WC"]}
-                placeholders={{ positive: "+6.2", negative: "-1.2" }}
-            />
-            <SelectField
-                id="arrestorExists"
-                label="Existing Flame/Detonation Arrestor?"
-                description="Is safety equipment already installed?"
-                options={["No", "Yes", "Unsure"]}
-            />
-            <QuestionnaireField label="Piping Material" description="Material of construction for vapor lines.">
-              <input id="pipingMaterial" type="text" className={inputClasses} placeholder="e.g., Carbon Steel A106" />
+          <legend className="sr-only">{t.s3title}</legend>
+          <TankInventoryManager />
+          <div className="form-grid" style={{ marginTop: "1.5rem" }}>
+            <SelectField id="tankBlanketing" label={t.tankBlanketed} description={t.tankBlanketedDesc}
+              options={t.blanketOptions as unknown as string[]} />
+            <div>
+              <SelectField id="blanketingGasType" label={t.blanketGasType} description={t.blanketGasTypeDesc}
+                options={t.blanketGases as unknown as string[]} />
+              <UnitInputField id="blanketingPressure" label={t.blanketPressure} description={t.blanketPressureDesc}
+                units={['mbar', 'in WC', 'Pa']} placeholder={t.ph_blanketPressure} {...ui('blanketingPressure')} />
+            </div>
+          </div>
+        </fieldset>
+      );
+
+      case 4: return (
+        <fieldset>
+          <legend className="sr-only">{t.s4title}</legend>
+          <QuestionnaireField label={t.gcAnalysis} description={t.gcAnalysisDesc}>
+            <textarea id="gcAnalysis" rows={4} style={{ minHeight: "80px" }} placeholder={t.ph_gcAnalysis} />
+          </QuestionnaireField>
+          <div className="form-grid">
+            <QuestionnaireField label={t.corrosiveComponents} description={t.corrosiveDesc}>
+              <input id="corrosiveComponents" type="text" placeholder={t.ph_corrosive} />
+            </QuestionnaireField>
+            <SelectField id="vaporSaturation" label={t.vaporSaturation} description={t.vaporSaturationDesc}
+              options={t.saturationOptions as unknown as string[]} />
+            <UnitInputField id="vaporMolecularWeight" label={t.vaporMolWeight} description={t.vaporMolWeightDesc}
+              units={['g/mol']} placeholder={t.ph_molWeight} {...ui('vaporMolecularWeight')} />
+            <UnitInputField id="vaporLEL" label={t.vaporLEL} description={t.vaporLELDesc}
+              units={['% by vol']} placeholder={t.ph_lel} {...ui('vaporLEL')} />
+          </div>
+        </fieldset>
+      );
+
+      case 5: return (
+        <fieldset>
+          <legend className="sr-only">{t.s5title}</legend>
+          <div className="form-grid">
+            <UnitInputField id="headerSize" label={t.headerDiameter} description={t.headerDiameterDesc}
+              units={['mm', 'inches']} placeholder={t.ph_headerDiameter} {...ui('headerSize')} />
+            <UnitInputField id="pipingLength" label={t.pipingLength} description={t.pipingLengthDesc}
+              units={['meters', 'feet']} placeholder={t.ph_pipingLength} {...ui('pipingLength')} />
+            <SplitUnitInputField id="ventSetPoints" label={t.ventSetPoints} description={t.ventSetPointsDesc}
+              units={['mbar', 'in WC']} placeholders={{ positive: '+6.2', negative: '-1.2' }} />
+            <SelectField id="arrestorExists" label={t.arrestorExists} description={t.arrestorDesc}
+              options={t.arrestorOptions as unknown as string[]} />
+            <QuestionnaireField label={t.pipingMaterial} description={t.pipingMaterialDesc}>
+              <input id="pipingMaterial" type="text" placeholder={t.ph_pipingMaterial} />
             </QuestionnaireField>
           </div>
         </fieldset>
+      );
 
+      case 6: return (
         <fieldset>
-            <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">6. Utilities & Site Conditions</legend>
-            <div className="grid md:grid-cols-2 gap-x-6">
-                <div className="col-span-1 space-y-4">
-                     <QuestionnaireField label="Available Voltage" description="Specify the line-to-line voltage.">
-                        <input id="electricalVoltage" type="number" className={inputClasses} placeholder="e.g., 480" />
-                    </QuestionnaireField>
-                    <SelectField
-                        id="electricalPhase"
-                        label="Phase"
-                        options={["3-Phase", "Single-Phase"]}
-                    />
-                    <SelectField
-                        id="electricalFreq"
-                        label="Frequency"
-                        options={["60Hz", "50Hz"]}
-                    />
-                </div>
-                <div className="col-span-1 space-y-4">
-                     <SelectField 
-                        id="classificationSystem"
-                        label="Hazard Zone Classification System" 
-                        description="Select the standard used."
-                        options={["Class/Division", "Zone"]}
-                        value={classificationSystem}
-                        onChange={(e) => setClassificationSystem(e.target.value)}
-                    />
-                    {classificationSystem === 'Class/Division' ? (
-                        <div className="grid grid-cols-2 gap-x-2">
-                            <SelectField id="areaDiv" label="Division" options={["Div 1", "Div 2"]} />
-                            <SelectField id="areaGroup" label="Group" options={["A", "B", "C", "D"]} />
-                        </div>
-                    ) : (
-                         <div className="grid grid-cols-2 gap-x-2">
-                            <SelectField id="areaZone" label="Zone" options={["Zone 0", "Zone 1", "Zone 2"]} />
-                            <SelectField id="areaGasGroup" label="Gas Group" options={["IIA", "IIB", "IIC"]} />
-                        </div>
-                    )}
-                </div>
-                <div className="md:col-span-2">
-                    <SelectField
-                        id="electricitySupply"
-                        label="Electricity Supply Stability"
-                        description="Is the supply stable or subject to fluctuations?"
-                        options={["Stable Grid Supply", "Unstable Grid / Fluctuations", "Solar Panels / Variable Supply", "Generator Only"]}
-                    />
-                </div>
-                 <div className="md:col-span-2">
-                    <SelectField
-                        id="internetAccess"
-                        label="Internet Access at Installation Site"
-                        description="Select the most reliable internet connection type available for commissioning and remote monitoring."
-                        options={["Fiber Optic", "Ethernet", "Wi-Fi (Stable Coverage)", "Wi-Fi (Unreliable / Partial Coverage)", "Cellular (5G)", "Cellular (4G)", "No Internet Access"]}
-                    />
-                </div>
-                <div className="md:col-span-2">
-                    <UnitInputField
-                        id="instrumentAir"
-                        label="Available Instrument Air"
-                        description="Pressure of available compressed air."
-                        units={["bar", "PSIG"]}
-                        placeholder="e.g., 7"
-                        value={formState.instrumentAir.value}
-                        unit={formState.instrumentAir.unit}
-                        onValueChange={(val) => handleUnitInputChange('instrumentAir', 'value', val)}
-                        onUnitChange={(val) => handleUnitInputChange('instrumentAir', 'unit', val)}
-                    />
-                </div>
-                 <div className="md:col-span-2 mt-4">
-                    <label className="block text-sm font-medium text-[var(--color-text-tertiary)]">Available Cooling Water</label>
-                    <p className="mt-1 text-xs text-[var(--color-text-secondary)] mb-2">Specify flow, temperature, and pressure, if applicable.</p>
-                    <div className="grid sm:grid-cols-3 gap-x-6 p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-panel-alt-bg)]/50">
-                        <UnitInputField
-                            id="coolingWaterFlow"
-                            label="Flow Rate"
-                            units={["LPM", "GPM"]}
-                            placeholder="e.g., 380"
-                            value={formState.coolingWaterFlow.value}
-                            unit={formState.coolingWaterFlow.unit}
-                            onValueChange={(val) => handleUnitInputChange('coolingWaterFlow', 'value', val)}
-                            onUnitChange={(val) => handleUnitInputChange('coolingWaterFlow', 'unit', val)}
-                        />
-                        <UnitInputField
-                            id="coolingWaterTemp"
-                            label="Temperature"
-                            units={["°C", "°F"]}
-                            placeholder="e.g., 30"
-                            value={formState.coolingWaterTemp.value}
-                            unit={formState.coolingWaterTemp.unit}
-                            onValueChange={(val) => handleUnitInputChange('coolingWaterTemp', 'value', val)}
-                            onUnitChange={(val) => handleUnitInputChange('coolingWaterTemp', 'unit', val)}
-                        />
-                        <UnitInputField
-                            id="coolingWaterPressure"
-                            label="Pressure"
-                            units={["bar", "PSIG"]}
-                            placeholder="e.g., 3.5"
-                            value={formState.coolingWaterPressure.value}
-                            unit={formState.coolingWaterPressure.unit}
-                            onValueChange={(val) => handleUnitInputChange('coolingWaterPressure', 'value', val)}
-                            onUnitChange={(val) => handleUnitInputChange('coolingWaterPressure', 'unit', val)}
-                        />
-                    </div>
-                </div>
+          <legend className="sr-only">{t.s6title}</legend>
+          <div className="form-grid">
+            <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+              <QuestionnaireField label={t.availableVoltage} description={t.availableVoltageDesc}>
+                <input id="electricalVoltage" type="number" placeholder={t.ph_voltage} />
+              </QuestionnaireField>
+              <SelectField id="electricalPhase" label={t.phase} options={t.phaseOptions as unknown as string[]} />
+              <SelectField id="electricalFreq" label={t.frequency} options={t.frequencyOptions as unknown as string[]} />
             </div>
-        </fieldset>
-
-         <fieldset>
-            <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">7. Installation & Site Access</legend>
-            <div className="grid md:grid-cols-1 gap-x-6">
-                <QuestionnaireField
-                    label="Space Constraints or Limitations"
-                    description="Describe any physical limitations for the VRU installation area."
-                >
-                    <textarea
-                        id="spaceConstraints"
-                        rows={3}
-                        className={inputClasses}
-                        placeholder="e.g., Limited footprint of 10x15 ft, overhead height restriction of 20 ft."
-                    />
-                </QuestionnaireField>
-                <QuestionnaireField
-                    label="Available Construction Equipment"
-                    description="Do you have access to lifts or machinery for installation?"
-                >
-                    <textarea
-                        id="constructionEquipment"
-                        rows={3}
-                        className={inputClasses}
-                        placeholder="e.g., Yes, we have a 5-ton forklift and a 50-ft manlift available on site."
-                    />
-                </QuestionnaireField>
-                <div className="md:col-span-1 mt-4 p-4 bg-[var(--color-info-bg)] border-l-4 border-[var(--color-info-border)] rounded-r-lg">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-[var(--color-info-icon)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm text-[var(--color-info-text)]">
-                                For a more accurate assessment, please send any available site blueprints or P&IDs (Piping and Instrumentation Diagrams) separately to our engineering team.
-                            </p>
-                        </div>
-                    </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+              <SelectField id="classificationSystem" label={t.hazardClassSystem} description={t.hazardClassDesc}
+                options={t.hazardSystems as unknown as string[]}
+                value={classificationSystem} onChange={e => setClassificationSystem(e.target.value)} />
+              {classificationSystem === 'Class/Division' ? (
+                <div className="grid grid-cols-2 gap-x-2">
+                  <SelectField id="areaDiv" label={t.division} options={t.divisionOptions as unknown as string[]} />
+                  <SelectField id="areaGroup" label={t.group} options={t.groupOptions as unknown as string[]} />
                 </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-x-2">
+                  <SelectField id="areaZone" label={t.zone} options={t.zoneOptions as unknown as string[]} />
+                  <SelectField id="areaGasGroup" label={t.gasGroup} options={t.gasGroupOptions as unknown as string[]} />
+                </div>
+              )}
             </div>
-        </fieldset>
-
-
-         <fieldset>
-            <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">8. Regulatory & Compliance</legend>
-            <div className="grid md:grid-cols-2 gap-x-6">
-                <QuestionnaireField label="Applicable Environmental Regulations" description="List governing bodies (e.g., EPA, CARB, TA Luft).">
-                    <input id="regulations" type="text" className={inputClasses} placeholder="e.g., EPA 40 CFR Part 63, Subpart CC" />
-                </QuestionnaireField>
-                <UnitInputField
-                    id="vocRecovery"
-                    label="Required VOC Recovery Efficiency"
-                    description="The target percentage of VOCs to be recovered."
-                    units={["%"]}
-                    placeholder="e.g., 98.5"
-                    value={formState.vocRecovery.value}
-                    unit={formState.vocRecovery.unit}
-                    onValueChange={(val) => handleUnitInputChange('vocRecovery', 'value', val)}
-                    onUnitChange={(val) => handleUnitInputChange('vocRecovery', 'unit', val)}
-                />
+            <div className="col-span-2">
+              <SelectField id="electricitySupply" label={t.electricitySupply} description={t.electricitySupplyDesc}
+                options={t.electricityOptions as unknown as string[]} />
             </div>
-             <UnitInputField
-                id="noiseLevel"
-                label="Noise Level Requirements"
-                description="Maximum allowable noise at a specified distance."
-                units={["dBA @ 1m", "dBA @ 3ft"]}
-                placeholder="e.g., < 85"
-                value={formState.noiseLevel.value}
-                unit={formState.noiseLevel.unit}
-                onValueChange={(val) => handleUnitInputChange('noiseLevel', 'value', val)}
-                onUnitChange={(val) => handleUnitInputChange('noiseLevel', 'unit', val)}
-            />
+            <div className="col-span-2">
+              <SelectField id="internetAccess" label={t.internetAccess} description={t.internetAccessDesc}
+                options={t.internetOptions as unknown as string[]} />
+            </div>
+            <div className="col-span-2">
+              <UnitInputField id="instrumentAir" label={t.instrumentAir} description={t.instrumentAirDesc}
+                units={['bar', 'PSIG']} placeholder={t.ph_instrumentAir} {...ui('instrumentAir')} />
+            </div>
+            <div className="col-span-2">
+              <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "#374151", marginBottom: "0.375rem" }}>{t.coolingWater}</label>
+              <p style={{ fontSize: "0.75rem", color: "#6B7280", marginBottom: "0.75rem" }}>{t.coolingWaterDesc}</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", padding: "1rem", border: "1.5px solid #E5E7EB", borderRadius: "0.5rem", backgroundColor: "#F9FAFB" }}>
+                <UnitInputField id="coolingWaterFlow" label={t.coolingFlowRate} units={["LPM", "GPM"]} placeholder={t.ph_coolingFlow} {...ui('coolingWaterFlow')} />
+                <UnitInputField id="coolingWaterTemp" label={t.temperature} units={['°C', '°F']} placeholder={t.ph_coolingTemp} {...ui('coolingWaterTemp')} />
+                <UnitInputField id="coolingWaterPressure" label={t.pressure} units={['bar', 'PSIG']} placeholder={t.ph_coolingPressure} {...ui('coolingWaterPressure')} />
+              </div>
+            </div>
+          </div>
         </fieldset>
+      );
 
+      case 7: return (
         <fieldset>
-            <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">9. Project Management & Reporting</legend>
-            <QuestionnaireField
-                label="Reporting Requirements"
-                description="Will your company require additional documentation during installation?"
-            >
-                <textarea
-                    id="reportingRequirements"
-                    rows={4}
-                    className={inputClasses}
-                    placeholder="e.g., Yes, we require daily progress reports with photos and a weekly summary meeting with the project manager."
-                />
+          <legend className="sr-only">{t.s7title}</legend>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            <QuestionnaireField label={t.spaceConstraints} description={t.spaceConstraintsDesc}>
+              <textarea id="spaceConstraints" rows={3} placeholder={t.ph_spaceConstraints} />
             </QuestionnaireField>
-        </fieldset>
-        
-        <fieldset>
-            <legend className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 border-b pb-2 w-full border-[var(--color-border)]">10. Other Requirements</legend>
-            <QuestionnaireField
-                label="Additional Notes or Requirements"
-                description="Please provide any other relevant information, specifications, or constraints for this project."
-            >
-                <textarea
-                    id="otherRequirements"
-                    rows={5}
-                    className={inputClasses}
-                    placeholder="e.g., Skid-mounted unit required, specific paint specifications, preferred component manufacturers, etc."
-                />
+            <QuestionnaireField label={t.constructionEquipment} description={t.constructionEquipmentDesc}>
+              <textarea id="constructionEquipment" rows={3} placeholder={t.ph_constructionEquip} />
             </QuestionnaireField>
+            <div className="info-box mt-4">
+              <svg className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-info-icon)' }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <p>{t.blueprintNote}</p>
+            </div>
+          </div>
         </fieldset>
-        
-        <div className="text-right pt-4">
-          <button
-            type="button"
-            className="bg-[var(--color-pdf-button-bg)] text-[var(--color-pdf-button-text)] font-bold py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-[var(--color-pdf-button-bg)]/50 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-wait"
-            onClick={handleDownloadPdf}
-            disabled={isGeneratingPdf}
-          >
-            {isGeneratingPdf ? 'Generating PDF...' : 'Download as PDF for Review'}
-          </button>
+      );
+
+      case 8: return (
+        <fieldset>
+          <legend className="sr-only">{t.s8title}</legend>
+          <div className="form-grid">
+            <QuestionnaireField label={t.envRegulations} description={t.envRegulationsDesc}>
+              <input id="regulations" type="text" placeholder={t.ph_regulations} />
+            </QuestionnaireField>
+            <UnitInputField id="vocRecovery" label={t.vocRecovery} description={t.vocRecoveryDesc}
+              units={['%']} placeholder={t.ph_vocRecovery} {...ui('vocRecovery')} />
+          </div>
+          <UnitInputField id="noiseLevel" label={t.noiseLevel} description={t.noiseLevelDesc}
+            units={['dBA @ 1m', 'dBA @ 3ft']} placeholder={t.ph_noiseLevel} {...ui('noiseLevel')} />
+        </fieldset>
+      );
+
+      case 9: return (
+        <fieldset>
+          <legend className="sr-only">{t.s9title}</legend>
+          <QuestionnaireField label={t.reportingReqs} description={t.reportingReqsDesc}>
+            <textarea id="reportingRequirements" rows={5} placeholder={t.ph_reportingReqs} />
+          </QuestionnaireField>
+        </fieldset>
+      );
+
+      case 10: return (
+        <fieldset>
+          <legend className="sr-only">{t.s10title}</legend>
+          <QuestionnaireField label={t.additionalNotes} description={t.additionalNotesDesc}>
+            <textarea id="otherRequirements" rows={6} placeholder={t.ph_additionalNotes} />
+          </QuestionnaireField>
+        </fieldset>
+      );
+
+      default: return null;
+    }
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+  return (
+    <div id="detailed-questionnaire-form" className="mt-6">
+      {/* Page title */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>{t.detailedVRUSpec}</h1>
+        <p className="mt-2 max-w-2xl mx-auto text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t.detailedVRUSpecDesc}</p>
+      </div>
+
+      {/* Card */}
+      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', overflow: 'hidden', border: '1px solid #E5E7EB' }}>
+
+        {/* Step header — accent bar + stepper */}
+        <div style={{ borderBottom: `3px solid ${brandAccent}`, padding: '1.25rem 1.75rem 1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div>
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: brandAccent, marginBottom: '0.2rem' }}>
+                Step {step} of {TOTAL_STEPS}
+              </p>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                {stepLabels[step - 1]}
+              </h2>
+            </div>
+            {/* Mini progress pill */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', backgroundColor: '#F3F4F6', borderRadius: '9999px', padding: '0.375rem 0.875rem' }}>
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                <div key={i} style={{
+                  width: i + 1 === step ? '1.5rem' : '0.5rem',
+                  height: '0.5rem',
+                  borderRadius: '9999px',
+                  backgroundColor: i + 1 <= step ? brandAccent : '#D1D5DB',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                }} onClick={() => { setStep(i + 1); scrollToTop(); }} />
+              ))}
+            </div>
+          </div>
+          <ProgressBar
+            step={step} total={TOTAL_STEPS} labels={stepLabels}
+            onJump={s => { setStep(s); scrollToTop(); }}
+            accent={brandAccent} accentText={brandText}
+          />
         </div>
-      </form>
+
+        {/* Step content */}
+        <div style={{ padding: '2rem 1.75rem' }}>
+          <form onSubmit={e => e.preventDefault()}>
+            <div className="step-content" key={step}>
+              {renderStep()}
+            </div>
+            <StepNav
+              step={step} total={TOTAL_STEPS}
+              onBack={goBack} onNext={goNext} onSubmit={handleDownloadPdf}
+              isGeneratingPdf={isGeneratingPdf}
+              submitLabel={t.downloadPdf} generatingLabel={t.generatingPdf}
+              backLabel={lang === 'zh' ? '上一步' : lang === 'ar' ? 'السابق' : 'Back'}
+              nextLabel={lang === 'zh' ? '下一步' : lang === 'ar' ? 'التالي' : 'Next'}
+              accent={brandAccent} accentText={brandText}
+            />
+          </form>
+        </div>
+      </div>
+
     </div>
   );
 };
