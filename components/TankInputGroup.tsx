@@ -38,11 +38,11 @@ export const TankInputGroup: React.FC<TankInputGroupProps> = ({ tankData, onChan
         </button>
       )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2">
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 field-wrap">
                <label htmlFor={`tankId-${id}`} className="block text-xs font-medium text-(--color-text-tertiary) mb-1">{t.tankId}</label>
                <input id={`tankId-${id}`} type="text" value={tankId} onChange={handleInputChange('tankId')} className={inputClasses} placeholder={t.ph_tankId}/>
           </div>
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 field-wrap">
                <label htmlFor={`product-${id}`} className="block text-xs font-medium text-(--color-text-tertiary) mb-1">{t.productStored}</label>
                <input id={`product-${id}`} type="text" value={product} onChange={handleInputChange('product')} className={inputClasses} placeholder={t.ph_product}/>
           </div>

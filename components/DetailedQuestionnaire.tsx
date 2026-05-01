@@ -289,26 +289,63 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
         const h2 = document.createElement('h2'); h2.textContent = legend.textContent || '';
         printContainer.appendChild(h2);
       }
-      fieldset.querySelectorAll<HTMLElement>('.mb-4').forEach(wrapper => {
-        const label = wrapper.querySelector('label')?.textContent || '';
-        const numInputs = wrapper.querySelectorAll<HTMLInputElement>('input[type="number"]');
-        const sel = wrapper.querySelector<HTMLSelectElement>('select');
-        const inp = wrapper.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([type="number"]), textarea');
+      
+      // Keep track of labels we've already added to avoid duplicates
+      const addedLabels = new Set<string>();
+
+      // Find all input-like elements
+      const inputs = fieldset.querySelectorAll('input, select, textarea');
+      inputs.forEach(inputEl => {
+        const input = inputEl as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+        if (!input.value || !input.value.trim()) return;
+
+        // Find the label text
+        let labelText = '';
+        const label = fieldset.querySelector(`label[for="${input.id}"]`);
+        if (label) {
+          labelText = label.textContent?.trim() || '';
+        } else {
+          const wrap = input.closest('.field-wrap');
+          if (wrap) labelText = wrap.querySelector('label')?.textContent?.trim() || '';
+        }
+
+        if (!labelText || addedLabels.has(labelText)) return;
+
         let value = '';
-        if (numInputs.length === 2 && sel) {
-          const a = numInputs[0].value, b = numInputs[1].value;
-          if (a || b) value = `${a || 'N/A'} / ${b || 'N/A'} ${sel.value}`;
-        } else if (numInputs.length === 1 && sel) {
-          if (numInputs[0].value) value = `${numInputs[0].value} ${sel.value}`;
-        } else if (sel) { value = sel.value; }
-        else if (inp) {
-          value = inp.value;
-          if ((inp as HTMLInputElement).type === 'date' && value) {
-            const [y, mo, d] = value.split('-');
-            value = lang === 'zh' ? `${d}/${mo}/${y}` : `${mo}/${d}/${y}`;
+        const wrap = input.closest('.field-wrap') || input.parentElement;
+        if (wrap) {
+          // Check if this is a complex field with multiple inputs
+          const allInps = wrap.querySelectorAll('input:not([type="hidden"]), textarea, select');
+          const vals: string[] = [];
+          const units: string[] = [];
+
+          allInps.forEach(i => {
+            const el = i as HTMLInputElement | HTMLSelectElement;
+            if (el.tagName === 'SELECT') {
+              units.push(el.value);
+            } else if (el.value.trim()) {
+              vals.push(el.value);
+            }
+          });
+
+          if (vals.length > 0) {
+            value = vals.join(' / ');
+            if (units.length > 0) value += ` ${units[0]}`;
+            else {
+              const badge = wrap.querySelector('.unit-badge');
+              if (badge) value += ` ${badge.textContent}`;
+            }
+            
+            // Special handling for date
+            if (input.type === 'date') {
+              const [y, mo, d] = vals[0].split('-');
+              value = lang === 'zh' ? `${d}/${mo}/${y}` : `${mo}/${d}/${y}`;
+            }
+
+            addEntry(labelText, value);
+            addedLabels.add(labelText);
           }
         }
-        addEntry(label, value);
       });
     });
 
@@ -347,8 +384,8 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
   };
 
   // ── Step Sections ────────────────────────────────────────────────────────────
-  const renderStep = () => {
-    switch (step) {
+  const renderStep = (s: number) => {
+    switch (s) {
       case 1: return (
         <fieldset>
           <legend className="sr-only">{t.s1title}</legend>
@@ -417,7 +454,9 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
       case 3: return (
         <fieldset>
           <legend className="sr-only">{t.s3title}</legend>
-          <TankInventoryManager />
+          <div id="tank-inventory-section">
+            <TankInventoryManager />
+          </div>
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
             <SelectField id="tankBlanketing" label={t.tankBlanketed} description={t.tankBlanketedDesc}
               options={t.blanketOptions as unknown as string[]} />
@@ -626,8 +665,12 @@ export const DetailedQuestionnaire: React.FC<{ company?: string }> = ({ company 
         {/* Step content */}
         <div style={{ padding: '2rem 1.75rem' }}>
           <form onSubmit={e => e.preventDefault()}>
-            <div className="step-content" key={step}>
-              {renderStep()}
+            <div className="step-content">
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                <div key={i + 1} style={{ display: i + 1 === step ? 'block' : 'none' }}>
+                  {renderStep(i + 1)}
+                </div>
+              ))}
             </div>
             <StepNav
               step={step} total={TOTAL_STEPS}

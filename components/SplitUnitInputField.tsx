@@ -17,7 +17,7 @@ export const SplitUnitInputField: React.FC<SplitUnitInputFieldProps> = ({ id, la
   const baseInputClasses = "w-full pl-3 py-2 border shadow-sm focus:z-10 transition duration-150 ease-in-out bg-(--color-input-bg) text-(--color-text-primary) focus:ring-(--color-input-focus-ring) focus:border-(--color-input-focus-ring)";
 
   return (
-    <div className="mb-4">
+    <div className="field-wrap">
       <label htmlFor={`${id}-positive`} className="block text-sm font-medium text-(--color-text-tertiary)">
         {label}
       </label>
