@@ -8,7 +8,7 @@ type Company = 'sevali' | 'kosman' | 'custom';
 // Brand is set at build time via VITE_BRAND env variable.
 // In Vercel: set VITE_BRAND=sevali or VITE_BRAND=kosman in project environment variables.
 // Locally: set VITE_BRAND in .env.local
-const BRAND = (import.meta.env.VITE_BRAND as Company) || 'sevali';
+const BRAND = ((import.meta as any).env.VITE_BRAND as Company) || 'sevali';
 
 // Brand accent colors — fixed per company
 export const BRAND_COLOR: Record<Company, { accent: string; accentText: string }> = {

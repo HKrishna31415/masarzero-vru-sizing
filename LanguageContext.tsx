@@ -16,7 +16,8 @@ const LanguageContext = createContext<LanguageContextValue>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lang, setLang] = useState<Language>('en');
+  const defaultLang: Language = (import.meta as any).env.VITE_BRAND === 'kosman' ? 'zh' : 'en';
+  const [lang, setLang] = useState<Language>(defaultLang);
   const isRTL = lang === 'ar';
 
   useEffect(() => {
