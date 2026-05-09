@@ -11,11 +11,6 @@ body {
   margin: 0;
 }
 
-body.kosman {
-  background-color: #EBF2FA;
-  color: #0c2340;
-}
-
 [dir="rtl"] {
   font-family: 'Segoe UI', 'Tahoma', 'Arial', 'Noto Sans Arabic', sans-serif;
 }
@@ -48,15 +43,8 @@ input:not([type="radio"]):not([type="checkbox"]):focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: #6B7280;
-  box-shadow: 0 0 0 3px rgba(107,114,128,0.15);
-}
-
-body.kosman input:not([type="radio"]):not([type="checkbox"]):focus,
-body.kosman textarea:focus,
-body.kosman select:focus {
-  border-color: #1a4fa0;
-  box-shadow: 0 0 0 3px rgba(26,79,160,0.15);
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 }
 
 input::placeholder, textarea::placeholder {
