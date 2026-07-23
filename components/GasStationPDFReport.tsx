@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
 
 export interface GasStationFormData {
   siteName: string;
+  assessmentScope: 'single' | 'network';
   siteLocation: string;
   contactName: string;
   contactEmail: string;
@@ -142,6 +143,8 @@ export interface GasStationFormData {
   dispensersCount: string;
   existingVRU: string[];
   installationYear: string;
+  networkStationCount: string;
+  averageNetworkSales: string;
   gasolineL: string;
   gasohlL: string;
   ethanolL: string;
@@ -197,10 +200,11 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
           {renderRow(t.gsSiteLocation,  data.siteLocation,  true)}
           {renderRow(t.contactPerson,   data.contactName,   false)}
           {renderRow(t.contactEmail,    data.contactEmail,  true)}
+          {renderRow('Assessment scope', data.assessmentScope === 'network' ? 'Retail network' : 'Single station', false)}
         </View>
 
         {/* ── Station Configuration ── */}
-        <View style={styles.section}>
+        {data.assessmentScope === 'single' && <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t.gsConfigTitle}</Text>
           </View>
@@ -209,10 +213,12 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
           {renderRow(t.gsDispensers,    data.dispensersCount,  false)}
           {renderRow(t.gsExistingVRU,   data.existingVRU.join(', '), true)}
           {renderRow(t.gsInstallYear,   data.installationYear, false)}
-        </View>
+        </View>}
+
+        {data.assessmentScope === 'network' && <View style={styles.section}><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Retail network overview</Text></View>{renderRow('Number of gas stations', data.networkStationCount, false)}{renderRow('Average monthly sales per station', data.averageNetworkSales ? `${Number(data.averageNetworkSales).toLocaleString()} L/month` : undefined, true)}</View>}
 
         {/* ── Monthly Fuel Sales ── */}
-        <View style={styles.section}>
+        {data.assessmentScope === 'single' && <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{`${t.amountSold} (L/${t.gsMonthUnit})`}</Text>
           </View>
@@ -221,7 +227,7 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
           {renderRow(t.ethanol,   data.ethanolL  ? `${Number(data.ethanolL).toLocaleString()} L`  : '—', false)}
           {renderRow(t.diesel,    data.dieselL   ? `${Number(data.dieselL).toLocaleString()} L`   : '—', true)}
           {renderRow(t.gsTotalThroughput, `${data.totalL.toLocaleString()} L`, false)}
-        </View>
+        </View>}
 
         {/* ── Regulations & Notes ── */}
         {(data.regulations || data.notes) && (
@@ -235,7 +241,7 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
         )}
 
         {/* ── Machine Suggestion ── */}
-        {sg && (
+        {data.assessmentScope === 'single' && sg && (
           <View style={[styles.suggestionBox, { backgroundColor: sg.bg, borderColor: sg.border }]}>
             <Text style={[styles.suggestionTitle, { color: sg.color }]}>
               {t.gsSuggestionTitle}: {sg.label}

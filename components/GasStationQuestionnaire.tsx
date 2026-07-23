@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLang } from '../LanguageContext';
 import {
   Fuel, ArrowLeft, Download, AlertTriangle, CheckCircle2, ChevronDown,
@@ -52,7 +52,9 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
 
   // Site info
   const [siteName, setSiteName]           = useState('');
-  const [siteLocation, setSiteLocation]   = useState([initialLocation?.city, initialLocation?.country].filter(Boolean).join(', '));
+  const [assessmentScope, setAssessmentScope] = useState<'single' | 'network'>('single');
+  const [siteCountry, setSiteCountry]     = useState(initialLocation?.country || '');
+  const [siteCity, setSiteCity]           = useState(initialLocation?.city || '');
   const [contactName, setContactName]     = useState('');
   const [contactEmail, setContactEmail]   = useState('');
 
@@ -63,6 +65,8 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
   const [existingVRU, setExistingVRU]           = useState<string[]>([]);
   const [existingVRUOpen, setExistingVRUOpen]   = useState(false);
   const [installationYear, setInstallationYear] = useState('');
+  const [networkStationCount, setNetworkStationCount] = useState('');
+  const [averageNetworkSales, setAverageNetworkSales] = useState('');
 
   // Fuel sales (L/month)
   const [gasolineL, setGasolineL] = useState('');
@@ -73,6 +77,19 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
   // Additional
   const [regulations, setRegulations] = useState('');
   const [notes, setNotes]             = useState('');
+
+  useEffect(() => {
+    if (siteCountry || siteCity) return;
+    const controller = new AbortController();
+    void fetch('https://ipapi.co/json/', { signal: controller.signal, cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : undefined)
+      .then((data: { country_name?: string; country_capital?: string } | undefined) => {
+        if (!data) return;
+        setSiteCountry(data.country_name || '');
+        setSiteCity(data.country_capital || '');
+      }).catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   // Derived
   const gasNum    = parseFloat(gasolineL) || 0;
@@ -119,8 +136,8 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
 
   // PDF data object — rebuilt on every render so it's always fresh
   const pdfData = {
-    siteName, siteLocation, contactName, contactEmail,
-    tanksCount, pumpsCount, dispensersCount, existingVRU, installationYear,
+    siteName, assessmentScope, siteLocation: [siteCity, siteCountry].filter(Boolean).join(', '), contactName, contactEmail,
+    tanksCount, pumpsCount, dispensersCount, existingVRU, installationYear, networkStationCount, averageNetworkSales,
     gasolineL, gasohlL, ethanolL, dieselL,
     regulations, notes,
     suggestion,
@@ -163,14 +180,26 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
 
       <div className="space-y-6">
 
+        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+          <h2 className="text-base font-bold text-gray-900">What are you assessing?</h2>
+          <p className="mt-1 text-sm text-gray-600">Choose one so we only ask questions that apply.</p>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button type="button" onClick={() => setAssessmentScope('single')} aria-pressed={assessmentScope === 'single'} className={`min-h-14 rounded-lg border px-4 text-left text-sm font-bold ${assessmentScope === 'single' ? 'border-teal-700 bg-teal-50 text-teal-950' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>Single station<span className="mt-1 block text-xs font-normal">Size one specific filling station.</span></button>
+            <button type="button" onClick={() => setAssessmentScope('network')} aria-pressed={assessmentScope === 'network'} className={`min-h-14 rounded-lg border px-4 text-left text-sm font-bold ${assessmentScope === 'network' ? 'border-teal-700 bg-teal-50 text-teal-950' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>Retail network<span className="mt-1 block text-xs font-normal">Capture a high-level estate overview.</span></button>
+          </div>
+        </section>
+
         {/* ── Site Information ─────────────────────────────────────────── */}
-        <SectionCard icon={<Building2 size={16} className="text-teal-600" />} title={t.gsSiteInfoTitle}>
+        <SectionCard icon={<Building2 size={16} className="text-teal-600" />} title={assessmentScope === 'single' ? t.gsSiteInfoTitle : 'Retail network information'}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FieldWrap label={t.gsSiteName}>
-              <input type="text" value={siteName} onChange={e => setSiteName(e.target.value)} placeholder={t.ph_gsSiteName} />
+            <FieldWrap label={assessmentScope === 'single' ? t.gsSiteName : 'Network name'}>
+              <input type="text" value={siteName} onChange={e => setSiteName(e.target.value)} placeholder={assessmentScope === 'single' ? t.ph_gsSiteName : 'Example Retail Network'} />
             </FieldWrap>
-            <FieldWrap label={t.gsSiteLocation}>
-              <input type="text" value={siteLocation} onChange={e => setSiteLocation(e.target.value)} placeholder={t.ph_gsSiteLocation} />
+            <FieldWrap label="Country" hint="A location-based suggestion is provided; edit if needed.">
+              <input type="text" value={siteCountry} onChange={e => setSiteCountry(e.target.value)} placeholder="Enter country" />
+            </FieldWrap>
+            <FieldWrap label="City / region" hint="Suggested as the country capital; replace with the actual station city if different.">
+              <input type="text" value={siteCity} onChange={e => setSiteCity(e.target.value)} placeholder="Enter city" />
             </FieldWrap>
             <FieldWrap label={t.contactPerson}>
               <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder={t.ph_contact} />
@@ -182,7 +211,7 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
         </SectionCard>
 
         {/* ── Station Configuration ─────────────────────────────────── */}
-        <SectionCard icon={<Fuel size={16} className="text-teal-600" />} title={t.gsConfigTitle}>
+        {assessmentScope === 'single' && <SectionCard icon={<Fuel size={16} className="text-teal-600" />} title={t.gsConfigTitle}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
             <FieldWrap label={t.numberOfTanks} hint={t.gsHintTanks}>
               <input type="number" min="1" value={tanksCount} onChange={e => setTanksCount(e.target.value)} placeholder="e.g. 4" />
@@ -233,10 +262,12 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
               />
             </FieldWrap>
           </div>
-        </SectionCard>
+        </SectionCard>}
+
+        {assessmentScope === 'network' && <SectionCard icon={<Fuel size={16} className="text-teal-600" />} title="Retail network overview"><div className="grid grid-cols-1 gap-5 sm:grid-cols-2"><FieldWrap label="Number of gas stations" hint="Total stations represented by this network assessment."><input type="number" min="1" value={networkStationCount} onChange={e => setNetworkStationCount(e.target.value)} placeholder="e.g. 40" /></FieldWrap><FieldWrap label="Average monthly sales per station (L/month)" hint="Average station sales, not total network sales."><input type="number" min="0" value={averageNetworkSales} onChange={e => setAverageNetworkSales(e.target.value)} placeholder="e.g. 500000" /></FieldWrap></div></SectionCard>}
 
         {/* ── Monthly Fuel Sales ────────────────────────────────────── */}
-        <SectionCard
+        {assessmentScope === 'single' && <SectionCard
           icon={<Droplets size={16} className="text-teal-600" />}
           title={`${t.amountSold} (L/${t.gsMonthUnit})`}
         >
@@ -273,7 +304,7 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
               <span className="text-base font-black text-gray-800">{totalL.toLocaleString()} L/mo</span>
             </div>
           )}
-        </SectionCard>
+        </SectionCard>}
 
         {/* ── Regulations & Notes ───────────────────────────────────── */}
         <SectionCard icon={<Info size={16} className="text-teal-600" />} title={t.gsAdditionalTitle}>
@@ -288,7 +319,7 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
         </SectionCard>
 
         {/* ── Machine Suggestion ────────────────────────────────────── */}
-        {cfg && (
+        {assessmentScope === 'single' && cfg && (
           <div className={`rounded-2xl border-2 p-6 ${cfg.bgClass}`}>
             <div className="flex items-start gap-3 mb-3">
               {cfg.icon}

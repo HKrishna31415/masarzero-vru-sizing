@@ -223,7 +223,7 @@ export const translations = {
     generatingPdf: 'Generating PDF...',
 
     // Placeholders
-    ph_projectName: 'e.g., Tank Farm Expansion 2024',
+    ph_projectName: 'e.g., Tank Farm Expansion 2026',
     ph_country: 'Enter country',
     ph_city: 'Enter city',
     ph_address: 'e.g., 123 Industrial Way',
@@ -262,7 +262,7 @@ export const translations = {
     ph_reportingReqs: 'e.g., Yes, we require daily progress reports with photos and a weekly summary meeting.',
     ph_additionalNotes: 'e.g., Skid-mounted unit required, specific paint specifications, preferred component manufacturers, etc.',
     ph_marineTerminal: 'e.g., Marine Terminal',
-    ph_gsSiteName: 'Bapco Tazweed',
+    ph_gsSiteName: 'Example Station',
     ph_gsSiteLocation: 'Manama, Bahrain',
     ph_tempSwing: 'e.g., 15',
 
