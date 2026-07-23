@@ -122,12 +122,12 @@ export const QuestionnaireContainer: React.FC = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className="mt-6 flex gap-8 items-start max-w-7xl mx-auto">
+      <div className="mt-4 sm:mt-6 flex flex-col lg:flex-row gap-5 lg:gap-8 items-stretch lg:items-start max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex-1 min-w-0">
 
           {/* ── Page title ─────────────────────────────────────────────── */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+          <div className="text-center mb-4 sm:mb-6 px-1">
+            <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
               {t.detailedVRUSpec}
             </h1>
             <p className="mt-2 max-w-2xl mx-auto text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -230,14 +230,14 @@ export const QuestionnaireContainer: React.FC = () => {
             </div>
 
             {/* Step content */}
-            <div className="p-7 md:p-8">
+            <div className="p-4 sm:p-7 md:p-8">
               <form onSubmit={handleSubmit((data) => console.log(data))}>
                 <div className="min-h-[400px] step-content">
                   {renderStep(currentStep)}
                 </div>
 
                 {/* Navigation */}
-                <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-gray-100">
                   <button
                     type="button"
                     onClick={goBack}
@@ -248,7 +248,7 @@ export const QuestionnaireContainer: React.FC = () => {
                     {lang === 'ar' ? 'السابق' : lang === 'zh' ? '上一步' : 'Back'}
                   </button>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                     {/* Step counter badge */}
                     <span className="hidden sm:block text-xs text-gray-400 font-medium">
                       {currentStep} / {TOTAL_STEPS}
@@ -258,14 +258,14 @@ export const QuestionnaireContainer: React.FC = () => {
                       <button
                         type="button"
                         onClick={goNext}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95"
+                        className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 w-full sm:w-auto"
                         style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}
                       >
                         {lang === 'ar' ? 'التالي' : lang === 'zh' ? '下一步' : 'Next'}
                         <ChevronRight size={18} />
                       </button>
                     ) : (
-                      <button type="button" onClick={downloadSubmissionPackage} disabled={packaging} className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:opacity-60" style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}>
+                      <button type="button" onClick={downloadSubmissionPackage} disabled={packaging} className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:opacity-60 w-full sm:w-auto" style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}>
                         <span aria-hidden="true">↓</span>
                         {packaging ? 'Preparing ZIP…' : 'Download Submission ZIP'}
                       </button>

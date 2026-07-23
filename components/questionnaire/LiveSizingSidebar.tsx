@@ -18,7 +18,7 @@ export const LiveSizingSidebar: React.FC = () => {
     const loadingFreq = parseFloat(allData.loadingFrequency || '0');
 
     // Confidence score
-    const relevantFields = [
+    const baseFields = [
       allData.projectName, allData.siteCountry, allData.siteCity, allData.contactPerson,
       allData.storageType, allData.deliveryMethod, allData.loadingMethod,
       allData.loadingFrequency, allData.simultaneousLoading, allData.loadingPumpFlowRate?.value,
@@ -28,11 +28,20 @@ export const LiveSizingSidebar: React.FC = () => {
       allData.electricalVoltage, allData.classificationSystem,
       allData.instrumentAir?.value, allData.vocRecovery?.value, allData.noiseLevel?.value,
     ];
+    const refineryFields = [
+      allData.refineryUnit, allData.vaporSourceDescription, allData.operatingMode,
+      allData.operatingHours, allData.designVaporFlow?.value, allData.vaporInletPressure?.value,
+      allData.vaporInletTemperature?.value, allData.vaporCompositionBasis,
+      allData.downstreamDestination, allData.emissionsStandard, allData.requiredDocuments,
+    ];
+    const relevantFields = String(allData.storageType).toLowerCase() === 'refinery'
+      ? [...baseFields, ...refineryFields]
+      : baseFields;
 
     const filledCount = relevantFields.filter(
       v => v && (typeof v === 'string' ? v.trim() !== '' : true),
     ).length;
-    const confidenceScore = Math.floor((filledCount / relevantFields.length) * 99);
+    const confidenceScore = Math.min(100, Math.round((filledCount / relevantFields.length) * 100));
 
     // Rough estimate: pump flow × simultaneous trucks → SCFM
     const totalFlowLPM = pumpFlowLPM * simultaneousTrucks;
@@ -59,7 +68,7 @@ export const LiveSizingSidebar: React.FC = () => {
   const COLORS = ['#0d9488', '#E5E7EB'];
 
   return (
-    <div className="w-80 shrink-0 flex flex-col gap-5 sticky top-24 h-fit">
+    <div className="w-full lg:w-80 shrink-0 flex flex-col gap-5 lg:sticky lg:top-24 h-fit">
 
       {/* ── Confidence Score ─────────────────────────────────────────── */}
       <div className="bg-white p-5 rounded-2xl shadow-lg border border-gray-100">

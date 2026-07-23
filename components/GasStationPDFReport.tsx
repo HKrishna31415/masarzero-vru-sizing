@@ -140,7 +140,7 @@ export interface GasStationFormData {
   tanksCount: string;
   pumpsCount: string;
   dispensersCount: string;
-  existingVRU: string;
+  existingVRU: string[];
   installationYear: string;
   gasolineL: string;
   gasohlL: string;
@@ -207,7 +207,7 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
           {renderRow(t.numberOfTanks,   data.tanksCount,       false)}
           {renderRow(t.numberOfPumps,   data.pumpsCount,       true)}
           {renderRow(t.gsDispensers,    data.dispensersCount,  false)}
-          {renderRow(t.gsExistingVRU,   data.existingVRU,      true)}
+          {renderRow(t.gsExistingVRU,   data.existingVRU.join(', '), true)}
           {renderRow(t.gsInstallYear,   data.installationYear, false)}
         </View>
 

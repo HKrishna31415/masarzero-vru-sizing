@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLang } from '../LanguageContext';
 import {
-  Fuel, ArrowLeft, Download, AlertTriangle, CheckCircle2,
+  Fuel, ArrowLeft, Download, AlertTriangle, CheckCircle2, ChevronDown,
   Info, Building2, Droplets, FileText,
 } from 'lucide-react';
 import { MasarZeroLogo } from './MasarZeroLogo';
@@ -23,14 +23,14 @@ function getSuggestion(gasolineL: number, gasohlL: number): SuggestionTier {
 const SectionCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode }> = ({
   icon, title, children,
 }) => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible">
+    <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/60">
       <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
         {icon}
       </div>
       <h3 className="font-bold text-gray-800 text-sm">{title}</h3>
     </div>
-    <div className="p-6">{children}</div>
+    <div className="p-4 sm:p-6">{children}</div>
   </div>
 );
 
@@ -60,7 +60,8 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void }> = ({ onBa
   const [tanksCount, setTanksCount]             = useState('');
   const [pumpsCount, setPumpsCount]             = useState('');
   const [dispensersCount, setDispensersCount]   = useState('');
-  const [existingVRU, setExistingVRU]           = useState('');
+  const [existingVRU, setExistingVRU]           = useState<string[]>([]);
+  const [existingVRUOpen, setExistingVRUOpen]   = useState(false);
   const [installationYear, setInstallationYear] = useState('');
 
   // Fuel sales (L/month)
@@ -80,6 +81,11 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void }> = ({ onBa
   const dieselNum  = parseFloat(dieselL)  || 0;
   const totalL     = gasNum + gasohlNum + ethanolNum + dieselNum;
   const suggestion = getSuggestion(gasNum, gasohlNum);
+  const toggleExistingVRU = (option: string) => {
+    setExistingVRU(current => current.includes(option)
+      ? current.filter(value => value !== option)
+      : [...current, option]);
+  };
 
   const suggestionConfig = {
     compact: {
@@ -123,26 +129,26 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void }> = ({ onBa
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="max-w-3xl mx-auto px-3 sm:px-4 py-5 sm:py-10">
 
       {/* ── Back ─────────────────────────────────────────────────────── */}
       <button
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-teal-600 font-semibold hover:text-teal-700 transition-colors text-sm"
+        className="mb-5 sm:mb-8 flex items-center gap-2 text-teal-600 font-semibold hover:text-teal-700 transition-colors text-sm"
       >
         <ArrowLeft size={16} />
         {t.backToSelection}
       </button>
 
       {/* ── Header card ──────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-teal-700 to-teal-900 rounded-3xl p-8 text-white mb-8 shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-teal-700 to-teal-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white mb-5 sm:mb-8 shadow-xl relative overflow-hidden">
         <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-3 sm:gap-4 mb-3">
             <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center">
               <Fuel size={26} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight">{t.gasStationSizing}</h1>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight">{t.gasStationSizing}</h1>
               <p className="text-teal-200 text-sm mt-0.5">{t.gasStationSizingDesc}</p>
             </div>
           </div>
@@ -187,13 +193,37 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void }> = ({ onBa
             <FieldWrap label={t.gsDispensers} hint={t.gsHintDispensers}>
               <input type="number" min="1" value={dispensersCount} onChange={e => setDispensersCount(e.target.value)} placeholder="e.g. 16" />
             </FieldWrap>
-            <FieldWrap label={t.gsExistingVRU}>
-              <select value={existingVRU} onChange={e => setExistingVRU(e.target.value)}>
-                <option value="">{t.gsSelectOption}</option>
-                {(t.gsExistingVRUOptions as unknown as string[]).map((o: string) => (
-                  <option key={o} value={o}>{o}</option>
-                ))}
-              </select>
+            <FieldWrap label={t.gsExistingVRU} hint={t.gsExistingVRUHint}>
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-expanded={existingVRUOpen}
+                  onClick={() => setExistingVRUOpen(open => !open)}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-left text-sm text-gray-700 shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
+                >
+                  <span className={existingVRU.length ? 'text-gray-800' : 'text-gray-400'}>
+                    {existingVRU.length ? `${existingVRU.length} selected` : t.gsSelectOption}
+                  </span>
+                  <ChevronDown size={17} className={`text-gray-500 transition-transform ${existingVRUOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {existingVRUOpen && (
+                  <div className="absolute left-0 right-0 z-20 mt-2 rounded-xl border border-gray-200 bg-white p-2 shadow-lg" role="group" aria-label={t.gsExistingVRU}>
+                    {(t.gsExistingVRUOptions as unknown as string[]).map((o: string) => (
+                      <button
+                        key={o}
+                        type="button"
+                        aria-pressed={existingVRU.includes(o)}
+                        onClick={() => toggleExistingVRU(o)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${existingVRU.includes(o) ? 'border-teal-600 bg-teal-600 text-white' : 'border-gray-300 bg-white'}`}>{existingVRU.includes(o) ? '✓' : ''}</span>
+                        {o}
+                      </button>
+                    ))}
+                    <button type="button" onClick={() => setExistingVRUOpen(false)} className="mt-1 w-full border-t border-gray-100 pt-2 text-center text-xs font-semibold text-teal-700">Done</button>
+                  </div>
+                )}
+              </div>
             </FieldWrap>
             <FieldWrap label={t.gsInstallYear} hint={t.gsHintInstallYear}>
               <input
@@ -281,11 +311,11 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void }> = ({ onBa
 
         {/* ── Download card ─────────────────────────────────────────── */}
         <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-8 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
 
             {/* Logo + description */}
             <div className="flex flex-col items-center md:items-start gap-4">
-              <MasarZeroLogo height={151} />
+              <MasarZeroLogo height={100} />
               <div className="flex items-start gap-2.5 max-w-sm">
                 <FileText size={15} className="text-gray-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-gray-500 leading-relaxed">{t.gsSubmitDesc}</p>
