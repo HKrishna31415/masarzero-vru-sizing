@@ -28,7 +28,7 @@ export const RefineryDetails: React.FC = () => {
   return <div className="space-y-8 mt-8 pt-8 border-t-2 border-teal-100">
     <div className="flex items-start gap-3 p-4 rounded-xl bg-teal-50 border border-teal-100">
       <Activity className="text-teal-700 shrink-0 mt-0.5" size={18} />
-      <div><h3 className="font-bold text-teal-900">Refinery unit design basis</h3><p className="text-sm text-teal-800 mt-1">These fields are specific to refinery process units and replace truck-loading assumptions. Attach P&amp;IDs, GC reports, plot plans, and owner specifications where available.</p></div>
+      <div><h3 className="font-bold text-teal-900">Refinery unit design basis</h3><p className="text-sm text-teal-800 mt-1">Answer only for the tanks and process equipment connected to this proposed VRU—not for the whole refinery. Attach P&amp;IDs, GC reports, plot plans, and owner specifications where available.</p></div>
     </div>
     <Section icon={<Activity size={18} />} title="Process and operating basis" note="Define where the vapor comes from and how the unit operates.">
       {text('refineryUnit', 'Refinery unit / process area', 'e.g., Tank Farm 3, CDU, Loading Rack')}
@@ -39,13 +39,13 @@ export const RefineryDetails: React.FC = () => {
       {options('liquidCarryover', 'Potential liquid carryover', ['None expected', 'Possible', 'Known / continuous', 'Unknown'])}
     </Section>
     <Section icon={<Gauge size={18} />} title="Vapor flow and conditions" note="Use normal, minimum, maximum, and design cases—not one averaged flow rate.">
-      <ControlledUnitInputField name="normalVaporFlow" label="Normal vapor flow" units={['Nm³/h', 'Sm³/h', 'SCFM']} placeholder="e.g., 1,200" />
-      <ControlledUnitInputField name="minimumVaporFlow" label="Minimum vapor flow" units={['Nm³/h', 'Sm³/h', 'SCFM']} placeholder="e.g., 200" />
-      <ControlledUnitInputField name="maximumVaporFlow" label="Maximum vapor flow" units={['Nm³/h', 'Sm³/h', 'SCFM']} placeholder="e.g., 2,500" />
-      <ControlledUnitInputField name="designVaporFlow" label="Design vapor flow" units={['Nm³/h', 'Sm³/h', 'SCFM']} placeholder="Include design margin" />
+      <ControlledUnitInputField name="normalVaporFlow" label="Normal vapor flow" units={['Nm³/h', 'Sm³/h']} placeholder="e.g., 1,200" />
+      <ControlledUnitInputField name="minimumVaporFlow" label="Minimum vapor flow" units={['Nm³/h', 'Sm³/h']} placeholder="e.g., 200" />
+      <ControlledUnitInputField name="maximumVaporFlow" label="Maximum vapor flow" units={['Nm³/h', 'Sm³/h']} placeholder="e.g., 2,500" />
+      <ControlledUnitInputField name="designVaporFlow" label="Design vapor flow" units={['Nm³/h', 'Sm³/h']} placeholder="Include design margin" />
       <ControlledUnitInputField name="vaporInletPressure" label="VRU inlet pressure" units={['barg', 'mbar', 'kPag']} placeholder="e.g., 0.05" />
-      <ControlledUnitInputField name="vaporInletTemperature" label="VRU inlet temperature" units={['°C', '°F']} placeholder="e.g., 35" />
-      <ControlledUnitInputField name="hydrocarbonDewPoint" label="Hydrocarbon dew point" units={['°C', '°F']} placeholder="If available" />
+      <ControlledUnitInputField name="vaporInletTemperature" label="VRU inlet temperature" units={['°C']} placeholder="e.g., 35" />
+      <ControlledUnitInputField name="hydrocarbonDewPoint" label="Hydrocarbon dew point" units={['°C']} placeholder="If available" />
       {options('downstreamDestination', 'Downstream destination', ['Recovered product', 'Fuel-gas system', 'Flare', 'Incinerator', 'Other'])}
       <ControlledUnitInputField name="downstreamPressure" label="Downstream pressure" units={['barg', 'mbar', 'kPag']} placeholder="e.g., 0.3" />
     </Section>

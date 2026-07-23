@@ -15,9 +15,10 @@ import { Step7 } from './Step7';
 import { Step8 } from './Step8';
 import { Step9 } from './Step9';
 import { Step10 } from './Step10';
-import { LiveSizingSidebar } from './LiveSizingSidebar';
 
 import { PDFReport } from './PDFReport';
+import { PortfolioPDFReport } from './PortfolioPDFReport';
+import { RetailNetworkPortfolio, StorageRefineryPortfolioSite } from '../../store/usePortfolioStore';
 import {
   CheckCircle2, ChevronLeft, ChevronRight,
   FolderOpen, Settings2, FlaskConical, Pipette, Zap,
@@ -31,12 +32,13 @@ const STEP_ICONS = [
   Zap, HardHat, ShieldAlert, BarChart3, StickyNote,
 ];
 
-export const QuestionnaireContainer: React.FC = () => {
+export const QuestionnaireContainer: React.FC<{ portfolioSites?: StorageRefineryPortfolioSite[]; retailNetwork?: RetailNetworkPortfolio }> = ({ portfolioSites = [], retailNetwork }) => {
   const { formData, setFormData, currentStep, setStep } = useQuestionnaireStore();
   const { tokens } = useTheme();
   const { t, lang } = useLang();
   const [attachments, setAttachments] = useState<File[]>([]);
   const [packaging, setPackaging] = useState(false);
+  const [packageError, setPackageError] = useState('');
 
   const methods = useForm<QuestionnaireData>({
     resolver: zodResolver(questionnaireSchema) as any,
@@ -77,7 +79,7 @@ export const QuestionnaireContainer: React.FC = () => {
       case 7: return <Step7 />;
       case 8: return <Step8 />;
       case 9: return <Step9 />;
-      case 10: return <Step10 attachments={attachments} onAttachmentsChange={(files) => setAttachments(files)} />;
+      case 10: return <Step10 attachments={attachments} onAttachmentsChange={(files) => setAttachments(files)} onRemoveAttachment={(index) => setAttachments((files) => files.filter((_, fileIndex) => fileIndex !== index))} />;
       default: return null;
     }
   };
@@ -86,6 +88,7 @@ export const QuestionnaireContainer: React.FC = () => {
 
   const downloadSubmissionPackage = async () => {
     setPackaging(true);
+    setPackageError('');
     try {
       // Load packaging dependencies only when the user requests the export.
       // This keeps the questionnaire entry path independent of ZIP/PDF tooling.
@@ -95,16 +98,21 @@ export const QuestionnaireContainer: React.FC = () => {
       ]);
       const JSZip = JSZipModule.default;
       const data = watch() as QuestionnaireData;
-      const report = await pdf(<PDFReport data={data} tokens={tokens} t={t} />).toBlob();
+      const [report, portfolioReport] = await Promise.all([
+        pdf(<PDFReport data={data} tokens={tokens} t={t} />).toBlob(),
+        pdf(<PortfolioPDFReport sites={portfolioSites} retailNetwork={retailNetwork || { country: '', region: '', stationCount: '', averageMonthlySalesLitres: '', priority: 'Medium' }} />).toBlob(),
+      ]);
       const zip = new JSZip();
       const project = String(data.projectName || 'VRU_Submission').replace(/[^a-z0-9-_]+/gi, '_');
       zip.file('VRU_Questionnaire_Response.json', JSON.stringify(data, null, 2));
       zip.file('VRU_Questionnaire_Report.pdf', report);
+      zip.file('Portfolio_Summary.json', JSON.stringify({ storageRefinerySites: portfolioSites, retailNetwork }, null, 2));
+      zip.file('Portfolio_Summary.pdf', portfolioReport);
       if (attachments.length) {
         const folder = zip.folder('Supporting_Documents');
         attachments.forEach((file) => folder?.file(file.name, file));
       }
-      zip.file('README.txt', `MasarZero VRU Questionnaire Submission\nProject: ${data.projectName || 'Not specified'}\nCreated: ${new Date().toISOString()}\n\nThis package contains the completed questionnaire, PDF report, and supporting documents supplied by the requester.`);
+      zip.file('README.txt', `MasarZero VRU Questionnaire Submission\nProject: ${data.projectName || 'Not specified'}\nCreated: ${new Date().toISOString()}\n\nThis package contains a portfolio market overview, the completed selected-site questionnaire, engineering-review PDFs, and supporting documents supplied by the requester. It is not an approved VRU design.`);
       const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -114,7 +122,7 @@ export const QuestionnaireContainer: React.FC = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Unable to create VRU submission ZIP', error);
-      window.alert('The submission package could not be created. Please try again or remove any unusually large attachment.');
+      setPackageError('We could not create the submission ZIP. Please try again or remove an unusually large attachment.');
     } finally {
       setPackaging(false);
     }
@@ -122,8 +130,8 @@ export const QuestionnaireContainer: React.FC = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className="mt-4 sm:mt-6 flex flex-col lg:flex-row gap-5 lg:gap-8 items-stretch lg:items-start max-w-7xl mx-auto px-3 sm:px-4">
-        <div className="flex-1 min-w-0">
+      <div className="mt-4 sm:mt-6 max-w-5xl mx-auto px-3 sm:px-4">
+        <div className="min-w-0">
 
           {/* ── Page title ─────────────────────────────────────────────── */}
           <div className="text-center mb-4 sm:mb-6 px-1">
@@ -265,10 +273,10 @@ export const QuestionnaireContainer: React.FC = () => {
                         <ChevronRight size={18} />
                       </button>
                     ) : (
-                      <button type="button" onClick={downloadSubmissionPackage} disabled={packaging} className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:opacity-60 w-full sm:w-auto" style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}>
+                      <div className="w-full sm:w-auto"><button type="button" onClick={downloadSubmissionPackage} disabled={packaging} className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:opacity-60 sm:w-auto sm:px-6 sm:py-2.5" style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}>
                         <span aria-hidden="true">↓</span>
                         {packaging ? 'Preparing ZIP…' : 'Download Submission ZIP'}
-                      </button>
+                      </button>{packageError && <p className="mt-2 max-w-xs text-xs font-medium text-red-700" role="alert">{packageError}</p>}</div>
                     )}
                   </div>
                 </div>
@@ -277,7 +285,6 @@ export const QuestionnaireContainer: React.FC = () => {
           </div>
         </div>
 
-        <LiveSizingSidebar />
       </div>
     </FormProvider>
   );

@@ -5,6 +5,17 @@ const UnitValueSchema = z.object({
   unit: z.string(),
 });
 
+const TankSchema = z.object({
+  tankId: z.string().default(''), product: z.string().default(''),
+  volume: UnitValueSchema.default({ value: '', unit: 'm³' }),
+  normalInventory: UnitValueSchema.default({ value: '', unit: 't' }),
+  maximumUsableCapacity: UnitValueSchema.default({ value: '', unit: 't' }),
+  diameter: UnitValueSchema.default({ value: '', unit: 'm' }), height: UnitValueSchema.default({ value: '', unit: 'm' }),
+  throughput: UnitValueSchema.default({ value: '', unit: 'm³/month' }),
+  type: z.string().default('Cone Roof'), material: z.string().default('Carbon Steel'),
+  designCode: z.string().default('ISO 28300 / EN 14015'), vaporCollectionParticipation: z.string().default('Yes'),
+});
+
 export const questionnaireSchema = z.object({
   // Step 1: Project Information
   projectName: z.string().optional(),
@@ -21,6 +32,13 @@ export const questionnaireSchema = z.object({
   storageTypeOther: z.string().optional(),
   deliveryMethod: z.string().optional(),
   loadingMethod: z.string().optional(),
+  transferSources: z.array(z.string()).default([]),
+  pipelineTransferFlowRate: UnitValueSchema.default({ value: '', unit: 'm³/h' }),
+  simultaneousTransferLines: z.string().optional(),
+  normalTransferHours: z.string().optional(),
+  peakTransferHours: z.string().optional(),
+  transferPressure: UnitValueSchema.default({ value: '', unit: 'barg' }),
+  transferFillMethod: z.string().optional(),
   loadingFrequency: z.string().optional(),
   loadingPumpFlowRate: UnitValueSchema.default({ value: '', unit: 'LPM' }),
   simultaneousLoading: z.string().optional(),
@@ -67,7 +85,7 @@ export const questionnaireSchema = z.object({
   tankBlanketing: z.string().optional(),
   blanketingGasType: z.string().optional(),
   blanketingPressure: UnitValueSchema.default({ value: '', unit: 'mbar' }),
-  tanks: z.array(z.any()).default([]), // For TankInventoryManager
+  tanks: z.array(TankSchema).default([]),
 
   // Step 4: Vapor Composition
   gcAnalysis: z.string().optional(),
@@ -89,7 +107,7 @@ export const questionnaireSchema = z.object({
   electricalVoltage: z.string().optional(),
   electricalPhase: z.string().optional(),
   electricalFreq: z.string().optional(),
-  classificationSystem: z.string().default('Class/Division'),
+  classificationSystem: z.string().default('Zone'),
   areaDiv: z.string().optional(),
   areaGroup: z.string().optional(),
   areaZone: z.string().optional(),

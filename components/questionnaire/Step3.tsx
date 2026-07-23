@@ -31,7 +31,7 @@ export const Step3: React.FC = () => {
             name="blanketingPressure" 
             label={t.blanketPressure} 
             description={t.blanketPressureDesc}
-            units={['mbar', 'in WC', 'Pa']} 
+            units={['mbar', 'Pa']}
             placeholder={t.ph_blanketPressure} 
           />
         </div>

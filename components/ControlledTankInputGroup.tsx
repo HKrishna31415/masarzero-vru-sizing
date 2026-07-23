@@ -45,15 +45,21 @@ export const ControlledTankInputGroup: React.FC<ControlledTankInputGroupProps> =
              <ControlledUnitInputField 
                 name={`tanks.${index}.volume`} 
                 label={t.volume} 
-                units={['L', 'gal', 'm³']} 
+                units={['m³']}
                 placeholder={t.ph_volume} 
              />
+          </div>
+          <div className="md:col-span-1">
+             <ControlledUnitInputField name={`tanks.${index}.normalInventory`} label="Normal operating inventory" description="Typical liquid inventory." units={['t']} placeholder="e.g. 850" />
+          </div>
+          <div className="md:col-span-1">
+             <ControlledUnitInputField name={`tanks.${index}.maximumUsableCapacity`} label="Maximum usable capacity" description="Maximum working inventory." units={['t']} placeholder="e.g. 1000" />
           </div>
           <div className="md:col-span-1">
              <ControlledUnitInputField 
                 name={`tanks.${index}.diameter`} 
                 label={t.diameter} 
-                units={['m', 'ft']} 
+                units={['m']}
                 placeholder={t.ph_diameter} 
              />
           </div>
@@ -61,7 +67,7 @@ export const ControlledTankInputGroup: React.FC<ControlledTankInputGroupProps> =
              <ControlledUnitInputField 
                 name={`tanks.${index}.height`} 
                 label={t.height} 
-                units={['m', 'ft']} 
+                units={['m']}
                 placeholder={t.ph_height} 
              />
           </div>
@@ -71,6 +77,9 @@ export const ControlledTankInputGroup: React.FC<ControlledTankInputGroupProps> =
                 label={t.tankType} 
                 options={t.tankTypes as unknown as string[]} 
              />
+          </div>
+          <div className="md:col-span-1">
+             <ControlledSelectField name={`tanks.${index}.vaporCollectionParticipation`} label="Connected to this vapor system?" options={['Yes', 'No']} />
           </div>
           <div className="md:col-span-1">
              <ControlledSelectField 
@@ -83,14 +92,14 @@ export const ControlledTankInputGroup: React.FC<ControlledTankInputGroupProps> =
              <ControlledSelectField 
                 name={`tanks.${index}.designCode`} 
                 label={t.designCode} 
-                options={t.designCodes as unknown as string[]} 
+                options={['ISO 28300 / EN 14015', 'API 650 (owner requirement)', 'Other']}
              />
           </div>
           <div className="md:col-span-3">
              <ControlledUnitInputField 
                 name={`tanks.${index}.throughput`} 
                 label={t.avgThroughput} 
-                units={['L/month', 'm³/month', 'gal/month', 'bbl/day']} 
+                units={['m³/month', 'm³/day']}
                 placeholder={t.ph_throughput} 
              />
           </div>

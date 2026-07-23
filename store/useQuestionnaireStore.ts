@@ -7,13 +7,16 @@ interface QuestionnaireState {
   currentStep: number;
   setFormData: (data: Partial<QuestionnaireData>) => void;
   setStep: (step: number) => void;
-  resetForm: () => void;
+  resetForm: (seed?: Partial<QuestionnaireData>) => void;
 }
 
 const initialData: Partial<QuestionnaireData> = {
-  storageType: 'Truck Filling Station',
-  classificationSystem: 'Class/Division',
+  storageType: 'Storage Facility',
+  classificationSystem: 'Zone',
   loadingPumpFlowRate: { value: '', unit: 'LPM' },
+  transferSources: [],
+  pipelineTransferFlowRate: { value: '', unit: 'm³/h' },
+  transferPressure: { value: '', unit: 'barg' },
   simultaneousLoading: '',
   dischargePressure: { value: '', unit: 'bar' },
   ambientTempMax: { value: '', unit: '°C' },
@@ -42,7 +45,7 @@ export const useQuestionnaireStore = create<QuestionnaireState>()(
           formData: { ...state.formData, ...data },
         })),
       setStep: (step) => set({ currentStep: step }),
-      resetForm: () => set({ formData: initialData, currentStep: 1 }),
+      resetForm: (seed = {}) => set({ formData: { ...initialData, ...seed }, currentStep: 1 }),
     }),
     {
       name: 'vru-questionnaire-storage',

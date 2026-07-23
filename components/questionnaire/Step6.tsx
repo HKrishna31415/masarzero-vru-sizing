@@ -51,15 +51,15 @@ export const Step6: React.FC = () => {
         </div>
 
         <div className="col-span-2">
-          <ControlledUnitInputField name="instrumentAir" label={t.instrumentAir} units={['bar', 'PSIG']} placeholder={t.ph_instrumentAir} />
+          <ControlledUnitInputField name="instrumentAir" label={t.instrumentAir} units={['bar']} placeholder={t.ph_instrumentAir} />
         </div>
 
         <div className="col-span-2 p-4 border rounded-lg bg-gray-50">
           <label className="block text-sm font-bold mb-2">{t.coolingWater}</label>
           <div className="grid grid-cols-3 gap-4">
-            <ControlledUnitInputField name="coolingWaterFlow" label={t.coolingFlowRate} units={["LPM", "GPM"]} placeholder={t.ph_coolingFlow} />
+            <ControlledUnitInputField name="coolingWaterFlow" label={t.coolingFlowRate} units={["LPM", "m³/h"]} placeholder={t.ph_coolingFlow} />
             <ControlledUnitInputField name="coolingWaterTemp" label={t.temperature} units={['°C', '°F']} placeholder={t.ph_coolingTemp} />
-            <ControlledUnitInputField name="coolingWaterPressure" label={t.pressure} units={['bar', 'PSIG']} placeholder={t.ph_coolingPressure} />
+            <ControlledUnitInputField name="coolingWaterPressure" label={t.pressure} units={['bar', 'kPa']} placeholder={t.ph_coolingPressure} />
           </div>
         </div>
       </div>

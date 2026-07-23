@@ -17,13 +17,13 @@ export const Step5: React.FC = () => {
         <ControlledUnitInputField 
           name="headerSize" 
           label={t.headerDiameter} 
-          units={['mm', 'inches']} 
+          units={['mm']}
           placeholder={t.ph_headerDiameter} 
         />
         <ControlledUnitInputField 
           name="pipingLength" 
           label={t.pipingLength} 
-          units={['meters', 'feet']} 
+          units={['m']}
           placeholder={t.ph_pipingLength} 
         />
         <div className="col-span-2 grid grid-cols-2 gap-4">
@@ -36,7 +36,7 @@ export const Step5: React.FC = () => {
           <ControlledSelectField 
             name="ventSetPointsUnit" 
             label="Unit" 
-            options={['mbar', 'in WC']} 
+            options={['mbar', 'Pa']}
           />
         </div>
         <ControlledSelectField 

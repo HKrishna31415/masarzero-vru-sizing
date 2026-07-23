@@ -48,27 +48,27 @@ export const translations = {
     flowRate: 'Flow Rate',
 
     // Questionnaire
-    detailedVRUSpec: 'Detailed VRU Specification',
-    detailedVRUSpecDesc: 'This section helps gather additional information for a more precise VRU system design. Fill out the fields below to provide our engineers with the necessary context for your project.',
+    detailedVRUSpec: 'VRU Project Design Questionnaire',
+    detailedVRUSpecDesc: 'Provide the information our engineers need to design and quote the proposed vapor recovery unit (VRU). This is not a questionnaire about the overall refinery project.',
 
     // Section 1
-    s1title: '1. Project Information',
-    projectNameId: 'Project Name / ID',
-    projectNameDesc: 'A unique identifier for this project.',
+    s1title: '1. Proposed VRU Project',
+    projectNameId: 'Proposed VRU project name / reference',
+    projectNameDesc: 'Use the name or reference for this VRU package—not the name of the wider refinery programme.',
     country: 'Country',
     countryDesc: 'The country where the site is located.',
-    cityState: 'City / State',
-    cityStateDesc: 'The city and state/province of the site.',
+    cityState: 'City / Region',
+    cityStateDesc: 'City and, where useful, state, province, or region of the VRU installation site.',
     streetAddress: 'Street Address',
-    streetAddressDesc: 'Full street address of the project site.',
+    streetAddressDesc: 'Full address or site/area reference for the proposed VRU installation.',
     contactPerson: 'Contact Person',
     contactPersonDesc: 'Primary technical or project contact.',
     contactEmail: 'Contact Email',
     contactEmailDesc: 'Email for project communications.',
-    projectStartDate: 'Project Start Date',
-    projectStartDateDesc: 'Expected start date.',
-    projectEndDate: 'Project Completion Date',
-    projectEndDateDesc: 'Target completion date.',
+    projectStartDate: 'Expected VRU project start',
+    projectStartDateDesc: 'When engineering, procurement, or installation of this VRU package is expected to start.',
+    projectEndDate: 'Target VRU commissioning date',
+    projectEndDateDesc: 'When you need this VRU package installed and ready to operate—not the refinery completion date.',
 
     // Section 2
     s2title: '2. Operational Conditions',
@@ -202,21 +202,21 @@ export const translations = {
     // Section 8
     s8title: '8. Regulatory & Compliance',
     envRegulations: 'Applicable Environmental Regulations',
-    envRegulationsDesc: 'List governing bodies (e.g., EPA, CARB, TA Luft).',
+    envRegulationsDesc: 'List the owner specification, environmental permit, and applicable local authority or project requirements.',
     vocRecovery: 'Required VOC Recovery Efficiency',
     vocRecoveryDesc: 'The target percentage of VOCs to be recovered.',
     noiseLevel: 'Noise Level Requirements',
     noiseLevelDesc: 'Maximum allowable noise at a specified distance.',
 
     // Section 9
-    s9title: '9. Project Management & Reporting',
-    reportingReqs: 'Reporting Requirements',
-    reportingReqsDesc: 'Will your company require additional documentation during installation?',
+    s9title: '9. VRU Package Reporting',
+    reportingReqs: 'VRU package reporting requirements',
+    reportingReqsDesc: 'List reports, approvals, inspection hold points, or document formats required from the VRU supplier.',
 
     // Section 10
-    s10title: '10. Other Requirements',
-    additionalNotes: 'Additional Notes or Requirements',
-    additionalNotesDesc: 'Please provide any other relevant information, specifications, or constraints for this project.',
+    s10title: '10. Other VRU Requirements',
+    additionalNotes: 'Other VRU requirements or constraints',
+    additionalNotesDesc: 'Add requirements that affect the proposed VRU package, installation, operation, or acceptance.',
 
     // PDF button
     downloadPdf: 'Download as PDF for Review',
@@ -224,8 +224,8 @@ export const translations = {
 
     // Placeholders
     ph_projectName: 'e.g., Tank Farm Expansion 2024',
-    ph_country: 'e.g., USA',
-    ph_city: 'e.g., Houston, TX',
+    ph_country: 'Enter country',
+    ph_city: 'Enter city',
     ph_address: 'e.g., 123 Industrial Way',
     ph_contact: 'e.g., Jane Doe',
     ph_email: 'e.g., jane.doe@example.com',
@@ -254,7 +254,7 @@ export const translations = {
     ph_coolingFlow: 'e.g., 380',
     ph_coolingTemp: 'e.g., 30',
     ph_coolingPressure: 'e.g., 3.5',
-    ph_regulations: 'e.g., EPA 40 CFR Part 63, Subpart CC',
+    ph_regulations: 'e.g., owner specification, permit reference, or local authority requirement',
     ph_vocRecovery: 'e.g., 98.5',
     ph_noiseLevel: 'e.g., < 85',
     ph_spaceConstraints: 'e.g., Limited footprint of 10x15 ft, overhead height restriction of 20 ft.',
@@ -340,7 +340,7 @@ export const translations = {
     sidebarComplexity: 'Complexity Factor',
     sidebarComplexityHigh: 'High',
     sidebarComplexityMedium: 'Medium',
-    sidebarApiNote: 'Sizing is based on API 2000 7th Ed. guidelines for vapor recovery systems.',
+    sidebarApiNote: 'Preliminary guidance follows SI units and IEC / ISO / EN project practice. Apply API only where required by the owner or project specification.',
     sidebarDisclaimer: 'This estimate is based on very rough calculations. Actual requirements may differ drastically. MasarZero\'s engineers will perform precise calculations based on your full submission.',
   },
   zh: {
@@ -544,7 +544,7 @@ export const translations = {
     // Section 8
     s8title: '8. 法规与合规',
     envRegulations: '适用环境法规',
-    envRegulationsDesc: '列出监管机构（例如 EPA、CARB、TA Luft）。',
+    envRegulationsDesc: '列出业主规范、环保许可证以及适用的地方主管部门或项目要求。',
     vocRecovery: '所需 VOC 回收效率',
     vocRecoveryDesc: '目标 VOC 回收百分比。',
     noiseLevel: '噪声水平要求',
@@ -888,7 +888,7 @@ export const translations = {
     // Section 8
     s8title: '٨. التنظيم والامتثال',
     envRegulations: 'اللوائح البيئية المعمول بها',
-    envRegulationsDesc: 'أدرج الجهات التنظيمية (مثل EPA، CARB، TA Luft).',
+    envRegulationsDesc: 'اذكر مواصفة المالك والتصريح البيئي ومتطلبات السلطة المحلية أو متطلبات المشروع ذات الصلة.',
     vocRecovery: 'كفاءة استرداد VOC المطلوبة',
     vocRecoveryDesc: 'النسبة المئوية المستهدفة لاسترداد VOC.',
     noiseLevel: 'متطلبات مستوى الضوضاء',

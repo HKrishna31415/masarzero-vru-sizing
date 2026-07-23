@@ -47,12 +47,12 @@ const FieldWrap: React.FC<{ label: string; hint?: string; children: React.ReactN
 );
 
 // ── Main component ────────────────────────────────────────────────────────────
-export const GasStationQuestionnaire: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLocation?: { country: string; city: string } }> = ({ onBack, initialLocation }) => {
   const { t } = useLang();
 
   // Site info
   const [siteName, setSiteName]           = useState('');
-  const [siteLocation, setSiteLocation]   = useState('');
+  const [siteLocation, setSiteLocation]   = useState([initialLocation?.city, initialLocation?.country].filter(Boolean).join(', '));
   const [contactName, setContactName]     = useState('');
   const [contactEmail, setContactEmail]   = useState('');
 

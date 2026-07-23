@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFormContext, useFieldArray } from 'react-hook-form';
+import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
 import { ControlledTankInputGroup } from './ControlledTankInputGroup';
 import { useLang } from '../LanguageContext';
 import { QuestionnaireData } from '../schema/questionnaireSchema';
@@ -7,6 +7,7 @@ import { QuestionnaireData } from '../schema/questionnaireSchema';
 export const ControlledTankInventoryManager: React.FC = () => {
   const { t } = useLang();
   const { control } = useFormContext<QuestionnaireData>();
+  const tanks = useWatch({ control, name: 'tanks' }) || [];
   const { fields, append, remove } = useFieldArray({
     control,
     name: "tanks"
@@ -16,25 +17,28 @@ export const ControlledTankInventoryManager: React.FC = () => {
     append({
       tankId: '',
       product: '',
-      volumeValue: '',
-      volumeUnit: 'L',
-      diameterValue: '',
-      diameterUnit: 'm',
-      heightValue: '',
-      heightUnit: 'm',
-      throughputValue: '',
-      throughputUnit: 'm³/month',
+      volume: { value: '', unit: 'm³' },
+      normalInventory: { value: '', unit: 't' },
+      maximumUsableCapacity: { value: '', unit: 't' },
+      diameter: { value: '', unit: 'm' }, height: { value: '', unit: 'm' },
+      throughput: { value: '', unit: 'm³/month' },
       type: 'Cone Roof',
       material: 'Carbon Steel',
-      designCode: 'API 650',
+      designCode: 'ISO 28300 / EN 14015',
+      vaporCollectionParticipation: 'Yes',
     });
   };
+  const total = (key: 'normalInventory' | 'maximumUsableCapacity') => tanks.reduce((sum, tank) => sum + (Number(tank?.[key]?.value) || 0), 0);
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-(--color-text-secondary)">
-        {t.tankInventoryDesc}
+        List only tanks whose vapor will be routed to the proposed VRU. Record both normal working inventory and maximum usable capacity in tonnes.
       </p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-lg bg-teal-50 px-4 py-3 text-sm text-teal-950"><span className="block text-xs font-semibold text-teal-700">Total normal inventory</span><strong className="text-lg">{total('normalInventory').toLocaleString()} t</strong></div>
+        <div className="rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-900"><span className="block text-xs font-semibold text-gray-600">Total maximum usable capacity</span><strong className="text-lg">{total('maximumUsableCapacity').toLocaleString()} t</strong></div>
+      </div>
       <div className="space-y-8">
         {fields.map((field, index) => (
           <ControlledTankInputGroup 
