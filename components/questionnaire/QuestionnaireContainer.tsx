@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { questionnaireSchema, QuestionnaireData } from '../../schema/questionnaireSchema';
@@ -17,10 +17,9 @@ import { Step9 } from './Step9';
 import { Step10 } from './Step10';
 import { LiveSizingSidebar } from './LiveSizingSidebar';
 
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import { PDFReport } from './PDFReport';
 import {
-  CheckCircle2, ChevronLeft, ChevronRight, FileDown,
+  CheckCircle2, ChevronLeft, ChevronRight,
   FolderOpen, Settings2, FlaskConical, Pipette, Zap,
   HardHat, ShieldAlert, BarChart3, StickyNote, Building2,
 } from 'lucide-react';
@@ -36,6 +35,8 @@ export const QuestionnaireContainer: React.FC = () => {
   const { formData, setFormData, currentStep, setStep } = useQuestionnaireStore();
   const { tokens } = useTheme();
   const { t, lang } = useLang();
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [packaging, setPackaging] = useState(false);
 
   const methods = useForm<QuestionnaireData>({
     resolver: zodResolver(questionnaireSchema) as any,
@@ -76,12 +77,48 @@ export const QuestionnaireContainer: React.FC = () => {
       case 7: return <Step7 />;
       case 8: return <Step8 />;
       case 9: return <Step9 />;
-      case 10: return <Step10 />;
+      case 10: return <Step10 attachments={attachments} onAttachmentsChange={(files) => setAttachments(files)} />;
       default: return null;
     }
   };
 
   const progressPct = Math.round(((currentStep - 1) / (TOTAL_STEPS - 1)) * 100);
+
+  const downloadSubmissionPackage = async () => {
+    setPackaging(true);
+    try {
+      // Load packaging dependencies only when the user requests the export.
+      // This keeps the questionnaire entry path independent of ZIP/PDF tooling.
+      const [{ pdf }, JSZipModule] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('jszip'),
+      ]);
+      const JSZip = JSZipModule.default;
+      const data = watch() as QuestionnaireData;
+      const report = await pdf(<PDFReport data={data} tokens={tokens} t={t} />).toBlob();
+      const zip = new JSZip();
+      const project = String(data.projectName || 'VRU_Submission').replace(/[^a-z0-9-_]+/gi, '_');
+      zip.file('VRU_Questionnaire_Response.json', JSON.stringify(data, null, 2));
+      zip.file('VRU_Questionnaire_Report.pdf', report);
+      if (attachments.length) {
+        const folder = zip.folder('Supporting_Documents');
+        attachments.forEach((file) => folder?.file(file.name, file));
+      }
+      zip.file('README.txt', `MasarZero VRU Questionnaire Submission\nProject: ${data.projectName || 'Not specified'}\nCreated: ${new Date().toISOString()}\n\nThis package contains the completed questionnaire, PDF report, and supporting documents supplied by the requester.`);
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${project}_VRU_Submission.zip`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Unable to create VRU submission ZIP', error);
+      window.alert('The submission package could not be created. Please try again or remove any unusually large attachment.');
+    } finally {
+      setPackaging(false);
+    }
+  };
 
   return (
     <FormProvider {...methods}>
@@ -228,22 +265,10 @@ export const QuestionnaireContainer: React.FC = () => {
                         <ChevronRight size={18} />
                       </button>
                     ) : (
-                      <PDFDownloadLink
-                        document={<PDFReport data={watch() as QuestionnaireData} tokens={tokens} t={t} />}
-                        fileName="VRU_Questionnaire_Report.pdf"
-                      >
-                        {({ loading }) => (
-                          <button
-                            type="button"
-                            disabled={loading}
-                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:opacity-60"
-                            style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}
-                          >
-                            <FileDown size={18} />
-                            {loading ? t.generatingPdf : t.downloadPdf}
-                          </button>
-                        )}
-                      </PDFDownloadLink>
+                      <button type="button" onClick={downloadSubmissionPackage} disabled={packaging} className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:opacity-90 hover:shadow-lg active:scale-95 disabled:opacity-60" style={{ backgroundColor: tokens.brandAccent, color: tokens.brandText }}>
+                        <span aria-hidden="true">↓</span>
+                        {packaging ? 'Preparing ZIP…' : 'Download Submission ZIP'}
+                      </button>
                     )}
                   </div>
                 </div>

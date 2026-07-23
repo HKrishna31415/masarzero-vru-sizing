@@ -46,8 +46,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onSelect }) => {
             <Factory size={64} className="text-white" />
           </div>
           <div className="text-center">
-            <h2 className="text-4xl font-extrabold text-gray-900 group-hover:text-white">{t.storageFacility}</h2>
-            <p className="mt-2 text-lg text-gray-500 group-hover:text-teal-100">{t.storageFacilityDesc}</p>
+          <h2 className="text-4xl font-extrabold text-gray-900 group-hover:text-white">Storage / Refinery</h2>
+          <p className="mt-2 text-lg text-gray-500 group-hover:text-teal-100">Tank farms, storage facilities, and refinery-unit VRU sizing</p>
           </div>
           <div className="mt-8 rounded-full bg-teal-600 px-8 py-3 text-lg font-bold text-white transition-colors group-hover:bg-white group-hover:text-teal-900 shadow-lg">
             {t.professionalSizing}

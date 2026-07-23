@@ -6,6 +6,7 @@ import { ControlledUnitInputField } from './ControlledUnitInputField';
 import { useLang } from '../../LanguageContext';
 import { QuestionnaireData } from '../../schema/questionnaireSchema';
 import { Truck, Thermometer, Gauge, Info } from 'lucide-react';
+import { RefineryDetails } from './RefineryDetails';
 
 const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({ icon, title, subtitle }) => (
   <div className="flex items-start gap-3 mb-5 pb-3 border-b border-gray-100">
@@ -23,6 +24,7 @@ export const Step2: React.FC = () => {
   const { t } = useLang();
   const { register, control } = useFormContext<QuestionnaireData>();
   const storageType = useWatch({ control, name: 'storageType' });
+  const isRefinery = String(storageType || '').trim().toLowerCase() === 'refinery' || storageType === (t.storageTypes as unknown as string[])[2];
 
   return (
     <fieldset className="space-y-8">
@@ -62,6 +64,7 @@ export const Step2: React.FC = () => {
         </div>
       </div>
 
+      {isRefinery ? <RefineryDetails /> : <>
       {/* ── Loading Operations ────────────────────────────────────────── */}
       <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
         <SectionHeader
@@ -152,6 +155,7 @@ export const Step2: React.FC = () => {
           />
         </div>
       </div>
+      </>}
     </fieldset>
   );
 };
