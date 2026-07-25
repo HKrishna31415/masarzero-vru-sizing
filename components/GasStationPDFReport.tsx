@@ -200,7 +200,7 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
           {renderRow(t.gsSiteLocation,  data.siteLocation,  true)}
           {renderRow(t.contactPerson,   data.contactName,   false)}
           {renderRow(t.contactEmail,    data.contactEmail,  true)}
-          {renderRow('Assessment scope', data.assessmentScope === 'network' ? 'Retail network' : 'Single station', false)}
+          {renderRow(t.assessmentScopeTitle, data.assessmentScope === 'network' ? t.retailNetwork : t.singleStation, false)}
         </View>
 
         {/* ── Station Configuration ── */}
@@ -215,7 +215,7 @@ export const GasStationPDFReport: React.FC<{ data: GasStationFormData }> = ({ da
           {renderRow(t.gsInstallYear,   data.installationYear, false)}
         </View>}
 
-        {data.assessmentScope === 'network' && <View style={styles.section}><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Retail network overview</Text></View>{renderRow('Number of gas stations', data.networkStationCount, false)}{renderRow('Average monthly sales per station', data.averageNetworkSales ? `${Number(data.averageNetworkSales).toLocaleString()} L/month` : undefined, true)}</View>}
+        {data.assessmentScope === 'network' && <View style={styles.section}><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{t.retailNetwork}</Text></View>{renderRow(t.numberOfStations, data.networkStationCount, false)}{renderRow(t.averageStationSales, data.averageNetworkSales ? `${Number(data.averageNetworkSales).toLocaleString()} L/${t.gsMonthUnit}` : undefined, true)}</View>}
 
         {/* ── Monthly Fuel Sales ── */}
         {data.assessmentScope === 'single' && <View style={styles.section}>

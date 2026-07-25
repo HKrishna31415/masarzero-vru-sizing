@@ -181,25 +181,25 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
       <div className="space-y-6">
 
         <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <h2 className="text-base font-bold text-gray-900">What are you assessing?</h2>
-          <p className="mt-1 text-sm text-gray-600">Choose one so we only ask questions that apply.</p>
+          <h2 className="text-base font-bold text-gray-900">{t.assessmentScopeTitle}</h2>
+          <p className="mt-1 text-sm text-gray-600">{t.assessmentScopeDesc}</p>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <button type="button" onClick={() => setAssessmentScope('single')} aria-pressed={assessmentScope === 'single'} className={`min-h-14 rounded-lg border px-4 text-left text-sm font-bold ${assessmentScope === 'single' ? 'border-teal-700 bg-teal-50 text-teal-950' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>Single station<span className="mt-1 block text-xs font-normal">Size one specific filling station.</span></button>
-            <button type="button" onClick={() => setAssessmentScope('network')} aria-pressed={assessmentScope === 'network'} className={`min-h-14 rounded-lg border px-4 text-left text-sm font-bold ${assessmentScope === 'network' ? 'border-teal-700 bg-teal-50 text-teal-950' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>Retail network<span className="mt-1 block text-xs font-normal">Capture a high-level estate overview.</span></button>
+            <button type="button" onClick={() => setAssessmentScope('single')} aria-pressed={assessmentScope === 'single'} className={`min-h-14 rounded-lg border px-4 text-left text-sm font-bold ${assessmentScope === 'single' ? 'border-teal-700 bg-teal-50 text-teal-950' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>{t.singleStation}<span className="mt-1 block text-xs font-normal">{t.singleStationDesc}</span></button>
+            <button type="button" onClick={() => setAssessmentScope('network')} aria-pressed={assessmentScope === 'network'} className={`min-h-14 rounded-lg border px-4 text-left text-sm font-bold ${assessmentScope === 'network' ? 'border-teal-700 bg-teal-50 text-teal-950' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>{t.retailNetwork}<span className="mt-1 block text-xs font-normal">{t.retailNetworkDesc}</span></button>
           </div>
         </section>
 
         {/* ── Site Information ─────────────────────────────────────────── */}
-        <SectionCard icon={<Building2 size={16} className="text-teal-600" />} title={assessmentScope === 'single' ? t.gsSiteInfoTitle : 'Retail network information'}>
+        <SectionCard icon={<Building2 size={16} className="text-teal-600" />} title={assessmentScope === 'single' ? t.gsSiteInfoTitle : t.networkInfoTitle}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FieldWrap label={assessmentScope === 'single' ? t.gsSiteName : 'Network name'}>
-              <input type="text" value={siteName} onChange={e => setSiteName(e.target.value)} placeholder={assessmentScope === 'single' ? t.ph_gsSiteName : 'Example Retail Network'} />
+            <FieldWrap label={assessmentScope === 'single' ? t.gsSiteName : t.networkName}>
+              <input type="text" value={siteName} onChange={e => setSiteName(e.target.value)} placeholder={assessmentScope === 'single' ? t.ph_gsSiteName : t.ph_networkName} />
             </FieldWrap>
-            <FieldWrap label="Country" hint="A location-based suggestion is provided; edit if needed.">
-              <input type="text" value={siteCountry} onChange={e => setSiteCountry(e.target.value)} placeholder="Enter country" />
+            <FieldWrap label={t.country} hint={t.locationSuggestion}>
+              <input type="text" value={siteCountry} onChange={e => setSiteCountry(e.target.value)} placeholder={t.ph_country} />
             </FieldWrap>
-            <FieldWrap label="City / region" hint="Suggested as the country capital; replace with the actual station city if different.">
-              <input type="text" value={siteCity} onChange={e => setSiteCity(e.target.value)} placeholder="Enter city" />
+            <FieldWrap label={t.cityRegion} hint={t.citySuggestion}>
+              <input type="text" value={siteCity} onChange={e => setSiteCity(e.target.value)} placeholder={t.ph_city} />
             </FieldWrap>
             <FieldWrap label={t.contactPerson}>
               <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} placeholder={t.ph_contact} />
@@ -264,7 +264,7 @@ export const GasStationQuestionnaire: React.FC<{ onBack: () => void; initialLoca
           </div>
         </SectionCard>}
 
-        {assessmentScope === 'network' && <SectionCard icon={<Fuel size={16} className="text-teal-600" />} title="Retail network overview"><div className="grid grid-cols-1 gap-5 sm:grid-cols-2"><FieldWrap label="Number of gas stations" hint="Total stations represented by this network assessment."><input type="number" min="1" value={networkStationCount} onChange={e => setNetworkStationCount(e.target.value)} placeholder="e.g. 40" /></FieldWrap><FieldWrap label="Average monthly sales per station (L/month)" hint="Average station sales, not total network sales."><input type="number" min="0" value={averageNetworkSales} onChange={e => setAverageNetworkSales(e.target.value)} placeholder="e.g. 500000" /></FieldWrap></div></SectionCard>}
+        {assessmentScope === 'network' && <SectionCard icon={<Fuel size={16} className="text-teal-600" />} title={t.retailNetwork}><div className="grid grid-cols-1 gap-5 sm:grid-cols-2"><FieldWrap label={t.numberOfStations} hint={t.numberOfStationsHint}><input type="number" min="1" value={networkStationCount} onChange={e => setNetworkStationCount(e.target.value)} placeholder="e.g. 40" /></FieldWrap><FieldWrap label={`${t.averageStationSales} (L/${t.gsMonthUnit})`} hint={t.averageStationSalesHint}><input type="number" min="0" value={averageNetworkSales} onChange={e => setAverageNetworkSales(e.target.value)} placeholder="e.g. 500000" /></FieldWrap></div></SectionCard>}
 
         {/* ── Monthly Fuel Sales ────────────────────────────────────── */}
         {assessmentScope === 'single' && <SectionCard
