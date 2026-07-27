@@ -39,6 +39,11 @@ export const questionnaireSchema = z.object({
   peakTransferHours: z.string().optional(),
   transferPressure: UnitValueSchema.default({ value: '', unit: 'barg' }),
   transferFillMethod: z.string().optional(),
+  worstCaseScenario: z.string().optional(),
+  simultaneousLoadingArms: z.string().optional(),
+  simultaneousMarineBerths: z.string().optional(),
+  averageLoadingRate: UnitValueSchema.default({ value: '', unit: 'm³/h' }),
+  peakLoadingRate: UnitValueSchema.default({ value: '', unit: 'm³/h' }),
   loadingFrequency: z.string().optional(),
   loadingPumpFlowRate: UnitValueSchema.default({ value: '', unit: 'LPM' }),
   simultaneousLoading: z.string().optional(),
@@ -67,6 +72,9 @@ export const questionnaireSchema = z.object({
   downstreamDestination: z.string().optional(),
   downstreamPressure: UnitValueSchema.default({ value: '', unit: 'barg' }),
   existingPipingDocuments: z.string().optional(),
+  controlSystemVendor: z.string().optional(),
+  plcRequirement: z.string().optional(),
+  communicationsInterface: z.string().optional(),
   reliefDesignResponsibility: z.string().optional(),
   esdRequired: z.string().optional(),
   silRequirement: z.string().optional(),
@@ -102,6 +110,8 @@ export const questionnaireSchema = z.object({
   ventSetPointsUnit: z.string().default('mbar'),
   arrestorExists: z.string().optional(),
   pipingMaterial: z.string().optional(),
+  tieInDistance: UnitValueSchema.default({ value: '', unit: 'm' }),
+  tieInElevationChange: UnitValueSchema.default({ value: '', unit: 'm' }),
 
   // Step 6: Utilities & Area Class
   electricalVoltage: z.string().optional(),
@@ -122,11 +132,18 @@ export const questionnaireSchema = z.object({
   // Step 7: Site Constraints
   spaceConstraints: z.string().optional(),
   constructionEquipment: z.string().optional(),
+  plotLength: UnitValueSchema.default({ value: '', unit: 'm' }),
+  plotWidth: UnitValueSchema.default({ value: '', unit: 'm' }),
+  plotLayoutRestrictions: z.string().optional(),
 
   // Step 8: Environmental & Safety
   regulations: z.string().optional(),
   vocRecovery: UnitValueSchema.default({ value: '', unit: '%' }),
   noiseLevel: UnitValueSchema.default({ value: '', unit: 'dBA @ 1m' }),
+  noiseBoundaryDistance: UnitValueSchema.default({ value: '', unit: 'm' }),
+  guaranteedOutletConcentration: UnitValueSchema.default({ value: '', unit: 'mg/Nm³' }),
+  outletPollutantBasis: z.string().optional(),
+  cemsRequirement: z.string().optional(),
 
   // Step 9: Reporting
   reportingRequirements: z.string().optional(),

@@ -18,6 +18,7 @@ export const Step2: React.FC = () => {
   const isRefinery = String(storageType || '').trim().toLowerCase() === 'refinery';
   const hasTruck = transferSources.includes('Truck receipt');
   const hasPipeline = transferSources.includes('Refinery / pipeline transfer');
+  const hasMarine = transferSources.includes('Marine / barge receipt');
   const toggleSource = (source: string) => setValue('transferSources', transferSources.includes(source)
     ? transferSources.filter(value => value !== source)
     : [...transferSources, source], { shouldDirty: true });
@@ -37,13 +38,21 @@ export const Step2: React.FC = () => {
       </div>
     </section>
 
+    {transferSources.length > 0 && <section className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:p-5"><div className="mb-5 flex items-start gap-3"><Gauge size={18} className="mt-0.5 text-amber-700"/><div><h3 className="font-bold text-amber-950">Worst-case simultaneous transfer case</h3><p className="mt-1 text-xs text-amber-900">This is the design case: every loading arm, truck bay, transfer line, or marine berth operating at the same exact time—not an average day.</p></div></div><div className="form-grid">
+      <QuestionnaireField label="Maximum simultaneous loading arms" description="Arms or hoses transferring product at the design peak, across all selected sources."><input {...register('simultaneousLoadingArms')} type="number" min="0" placeholder="e.g. 6" /></QuestionnaireField>
+      {hasMarine && <QuestionnaireField label="Maximum simultaneous marine berths" description="Berths loading or receiving concurrently in the design case."><input {...register('simultaneousMarineBerths')} type="number" min="0" placeholder="e.g. 1" /></QuestionnaireField>}
+      <ControlledUnitInputField name="averageLoadingRate" label="Average active transfer rate" description="Typical rate per active arm, bay, or line; do not use monthly throughput." units={['m³/h', 'm³/day']} placeholder="e.g. 150" />
+      <ControlledUnitInputField name="peakLoadingRate" label="Peak active transfer rate" description="Highest rate per active arm, bay, or line during the simultaneous design case." units={['m³/h', 'm³/day']} placeholder="e.g. 300" />
+      <div className="col-span-full"><QuestionnaireField label="Worst-case simultaneous scenario" description="Describe the exact combination: e.g. 4 truck bays plus 1 marine berth at peak rate, or 3 pipeline lines at maximum flow."><textarea {...register('worstCaseScenario')} rows={3} placeholder="Describe all simultaneous vapor-generating operations" /></QuestionnaireField></div>
+    </div></section>}
+
     {hasPipeline && <section className="rounded-xl border border-teal-100 bg-teal-50/50 p-4 sm:p-5"><div className="mb-5 flex items-start gap-3"><Gauge size={18} className="mt-0.5 text-teal-700"/><div><h3 className="font-bold text-teal-950">Refinery / pipeline transfer</h3><p className="mt-1 text-xs text-teal-800">Capture normal and peak transfer conditions for the vapor-source design case.</p></div></div><div className="form-grid">
       <ControlledUnitInputField name="pipelineTransferFlowRate" label="Transfer flow rate" description="Maximum flow from refinery or pipeline into connected tanks." units={['m³/h', 'm³/day']} placeholder="e.g. 250" />
       <QuestionnaireField label="Simultaneous transfer lines" description="Maximum number of lines operating together."><input {...register('simultaneousTransferLines')} type="number" min="1" placeholder="e.g. 2" /></QuestionnaireField>
       <QuestionnaireField label="Normal transfer hours" description="Typical transfer duration per day."><input {...register('normalTransferHours')} type="number" min="0" max="24" placeholder="e.g. 12" /></QuestionnaireField>
       <QuestionnaireField label="Peak transfer hours" description="Maximum daily duration during peak operation."><input {...register('peakTransferHours')} type="number" min="0" max="24" placeholder="e.g. 18" /></QuestionnaireField>
       <ControlledUnitInputField name="transferPressure" label="Transfer pressure" description="Pressure at the tank inlet or transfer header." units={['barg', 'kPa']} placeholder="e.g. 3" />
-      <ControlledSelectField name="transferFillMethod" label="Tank receipt / fill method" options={['Submerged fill pipe', 'Bottom fill', 'Top loading', 'Other']} />
+      <ControlledSelectField name="transferFillMethod" label="Tank receipt / fill method" description="Submerged: a top-entry dip pipe discharges below liquid level. Bottom fill: product enters through a lower tank nozzle. Select “Both / varies” where applicable." options={['Submerged fill (top-entry dip pipe)', 'Bottom fill (lower tank nozzle)', 'Top loading', 'Both / varies by tank', 'Other']} />
     </div></section>}
 
     {hasTruck && <section className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5"><div className="mb-5 flex items-start gap-3"><Gauge size={18} className="mt-0.5 text-teal-600"/><div><h3 className="font-bold text-gray-900">Truck receipt operations</h3><p className="mt-1 text-xs text-gray-600">Shown because truck receipt is selected as a vapor source.</p></div></div><div className="form-grid">

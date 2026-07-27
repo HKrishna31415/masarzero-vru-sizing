@@ -1,5 +1,5 @@
 import React from 'react';
-import { Fuel, Factory, ExternalLink } from 'lucide-react';
+import { Fuel, Factory, ExternalLink, FileDown } from 'lucide-react';
 import { useLang } from '../LanguageContext';
 import { MasarZeroLogo } from './MasarZeroLogo';
 
@@ -52,6 +52,16 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onSelect }) => {
           <div className="mt-4 rounded-full bg-teal-600 px-8 py-3 text-base font-bold text-white transition-colors group-hover:bg-white group-hover:text-teal-900 shadow-lg md:mt-8 md:text-lg">
             {t.professionalSizing}
           </div>
+          <a
+            href="/downloads/MasarZero_Storage_Refinery_VRU_Fillable_Questionnaire.pdf"
+            download
+            onClick={(event) => event.stopPropagation()}
+            className="z-20 inline-flex min-h-11 items-center gap-2 rounded-lg border border-teal-600 bg-white px-4 py-2 text-center text-sm font-semibold text-teal-800 hover:bg-teal-50"
+          >
+            <FileDown size={16} />
+            {t.fillablePdfOption}
+          </a>
+          <p className="z-10 -mt-3 max-w-sm text-center text-xs text-gray-600 group-hover:text-teal-100">{t.fillablePdfDesc}</p>
         </div>
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] pointer-events-none" />
       </button>

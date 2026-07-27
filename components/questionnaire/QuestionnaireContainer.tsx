@@ -108,11 +108,17 @@ export const QuestionnaireContainer: React.FC<{ portfolioSites?: StorageRefinery
       zip.file('VRU_Questionnaire_Report.pdf', report);
       zip.file('Portfolio_Summary.json', JSON.stringify({ storageRefinerySites: portfolioSites, retailNetwork }, null, 2));
       zip.file('Portfolio_Summary.pdf', portfolioReport);
+      try {
+        const templateResponse = await fetch('/downloads/MasarZero_Storage_Refinery_VRU_Fillable_Questionnaire.pdf');
+        if (templateResponse.ok) zip.file('MasarZero_Storage_Refinery_VRU_Fillable_Questionnaire.pdf', await templateResponse.blob());
+      } catch {
+        // The completed submission package remains available if the optional template cannot be loaded.
+      }
       if (attachments.length) {
         const folder = zip.folder('Supporting_Documents');
         attachments.forEach((file) => folder?.file(file.name, file));
       }
-      zip.file('README.txt', `MasarZero VRU Questionnaire Submission\nProject: ${data.projectName || 'Not specified'}\nCreated: ${new Date().toISOString()}\n\nThis package contains a portfolio market overview, the completed selected-site questionnaire, engineering-review PDFs, and supporting documents supplied by the requester. It is not an approved VRU design.`);
+      zip.file('README.txt', `MasarZero VRU Questionnaire Submission\nProject: ${data.projectName || 'Not specified'}\nCreated: ${new Date().toISOString()}\n\nThis package contains a portfolio market overview, the completed selected-site questionnaire, engineering-review PDFs, a blank fillable questionnaire template, and supporting documents supplied by the requester. It is not an approved VRU design.`);
       const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

@@ -47,6 +47,8 @@ export const Step5: React.FC = () => {
         <QuestionnaireField label={t.pipingMaterial} description={t.pipingMaterialDesc}>
           <input {...register('pipingMaterial')} type="text" placeholder={t.ph_pipingMaterial} className="w-full p-2 border rounded" />
         </QuestionnaireField>
+        <ControlledUnitInputField name="tieInDistance" label="Vapor-header tie-in to VRU plot distance" description="Physical route distance from the existing vapor-header collection point to the designated VRU skid plot—not total site piping." units={['m']} placeholder="e.g. 180" />
+        <ControlledUnitInputField name="tieInElevationChange" label="Tie-in to VRU plot elevation change" description="Net elevation difference along the vapor route; indicate the magnitude for preliminary pressure-drop review." units={['m']} placeholder="e.g. 4.5" />
       </div>
     </fieldset>
   );

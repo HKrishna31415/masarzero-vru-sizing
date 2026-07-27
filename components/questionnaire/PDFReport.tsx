@@ -129,9 +129,31 @@ export const PDFReport: React.FC<PDFReportProps> = ({ data, tokens, t }) => {
           {renderRow('Simultaneous transfer lines', data.simultaneousTransferLines)}
           {renderRow('Normal / peak transfer hours', data.normalTransferHours || data.peakTransferHours ? `${data.normalTransferHours || '—'} / ${data.peakTransferHours || '—'} h/day` : undefined)}
           {renderUnitValue('Transfer pressure', data.transferPressure)}
+          {renderRow('Maximum simultaneous loading arms', data.simultaneousLoadingArms)}
+          {renderRow('Maximum simultaneous marine berths', data.simultaneousMarineBerths)}
+          {renderUnitValue('Average active transfer rate', data.averageLoadingRate)}
+          {renderUnitValue('Peak active transfer rate', data.peakLoadingRate)}
+          {renderRow('Worst-case simultaneous scenario', data.worstCaseScenario)}
           {renderUnitValue(t.dischargePressure, data.dischargePressure)}
           {renderUnitValue(t.maxAmbientTemp, data.ambientTempMax)}
           {renderUnitValue(t.minAmbientTemp, data.ambientTempMin)}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Engineering scope, emissions, and controls</Text>
+          {renderUnitValue('Header tie-in to VRU plot distance', data.tieInDistance)}
+          {renderUnitValue('Tie-in elevation change', data.tieInElevationChange)}
+          {renderUnitValue('Usable VRU plot length', data.plotLength)}
+          {renderUnitValue('Usable VRU plot width', data.plotWidth)}
+          {renderRow('Plot layout restrictions', data.plotLayoutRestrictions)}
+          {renderUnitValue('Noise limit', data.noiseLevel)}
+          {renderUnitValue('Noise boundary / receptor distance', data.noiseBoundaryDistance)}
+          {renderUnitValue('Guaranteed outlet concentration limit', data.guaranteedOutletConcentration)}
+          {renderRow('Outlet pollutant and guarantee basis', data.outletPollutantBasis)}
+          {renderRow('CEMS / analyzer requirement', data.cemsRequirement)}
+          {renderRow('DCS / SCADA vendor', data.controlSystemVendor)}
+          {renderRow('Local PLC requirement', data.plcRequirement)}
+          {renderRow('Control-room handshake', data.communicationsInterface)}
         </View>
 
         {/* Step 3: Tank Inventory */}

@@ -275,6 +275,8 @@ export const translations = {
     getStarted: 'Get Started',
     backToSelection: 'Back to selection',
     backToWebsite: 'Back to masarzero.com',
+    fillablePdfOption: 'Use fillable PDF instead',
+    fillablePdfDesc: 'Download the Storage / Refinery questionnaire to complete offline and return by email or WhatsApp.',
 
     // Gas Station Questionnaire
     gasStationSizing: 'Gas Station Sizing',
@@ -649,6 +651,8 @@ export const translations = {
     getStarted: '开始使用',
     backToSelection: '返回选择',
     backToWebsite: '返回 masarzero.com',
+    fillablePdfOption: '改用可填写 PDF',
+    fillablePdfDesc: '下载储存 / 炼油问卷，离线填写后通过电子邮件或 WhatsApp 发送。',
 
     // Gas Station Questionnaire
     gasStationSizing: '加油站评估',
@@ -1025,6 +1029,8 @@ export const translations = {
     getStarted: 'ابدأ الآن',
     backToSelection: 'العودة للاختيار',
     backToWebsite: 'العودة إلى masarzero.com',
+    fillablePdfOption: 'استخدم نموذج PDF قابل للتعبئة',
+    fillablePdfDesc: 'نزّل استبيان التخزين / التكرير لإكماله دون اتصال ثم أرسله عبر البريد الإلكتروني أو واتساب.',
 
     // Gas Station Questionnaire
     gasStationSizing: 'تحجيم محطة الوقود',
